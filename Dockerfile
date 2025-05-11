@@ -9,6 +9,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
+# Copy env file first to ensure it's available during build
+COPY .env.local ./
+
 # Copy source code
 COPY . .
 
@@ -21,11 +24,11 @@ FROM nginx:alpine
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom nginx config if needed
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy env file to the final image
+COPY --from=builder /app/.env.local /usr/share/nginx/html/
 
-# Add environment variable handling
-COPY --from=builder /app/.env* /usr/share/nginx/html/
+# Copy nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
 EXPOSE 80
