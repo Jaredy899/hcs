@@ -258,9 +258,9 @@ export function ClientDetails({
                       const currentDate = new Date(client.nextQuarterlyReview);
                       
                       return (
-                        <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2">
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-24">{qr.label}:</span>
-                          <div className="flex items-center gap-2">
+                        <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-1">
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-20">{qr.label}:</span>
+                          <div className="flex items-center gap-1 flex-1">
                             <select
                               value={index === 0 ? currentDate.getMonth() + 1 : calculatedDate.getMonth() + 1}
                               onChange={(e) => {
@@ -302,13 +302,13 @@ export function ClientDetails({
                                   value: newDate.getTime(),
                                 });
                               }}
-                              className="text-sm rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              className="text-sm rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 w-16 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             >
                               {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                                 <option key={day} value={day}>{day}</option>
                               ))}
                             </select>
-                            <label className="flex items-center gap-1 ml-2">
+                            <label className="flex items-center gap-1 ml-1">
                               <input
                                 type="checkbox"
                                 checked={client[qrField] || false}
@@ -321,7 +321,7 @@ export function ClientDetails({
                                 }}
                                 className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700"
                               />
-                              <span className="text-sm text-gray-700 dark:text-gray-300">Completed</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">Done</span>
                             </label>
                           </div>
                         </div>
