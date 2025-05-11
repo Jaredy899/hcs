@@ -8,6 +8,7 @@ const applicationTables = {
     caseManagerId: v.id("users"),
     phoneNumber: v.string(),
     insurance: v.string(),
+    clientId: v.optional(v.string()),
     firstContactCompleted: v.boolean(),
     secondContactCompleted: v.boolean(),
     lastContactDate: v.optional(v.number()),

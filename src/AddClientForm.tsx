@@ -9,6 +9,7 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
     name: "",
     phoneNumber: "",
     insurance: "",
+    clientId: "",
     nextQuarterlyReview: {
       month: new Date().getMonth() + 1,
       day: 1
@@ -30,6 +31,7 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
         name: formData.name,
         phoneNumber: formData.phoneNumber,
         insurance: formData.insurance,
+        clientId: formData.clientId,
         nextQuarterlyReview: qrDate.getTime(),
         nextAnnualAssessment: annualDate.getTime(),
       });
@@ -92,6 +94,21 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
               value={formData.insurance}
               onChange={(e) =>
                 setFormData({ ...formData, insurance: e.target.value })
+              }
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Client ID
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.clientId}
+              onChange={(e) =>
+                setFormData({ ...formData, clientId: e.target.value })
               }
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />

@@ -150,6 +150,19 @@ export function ClientDetails({
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Client ID</label>
+                  <input
+                    type="text"
+                    value={client.clientId}
+                    onChange={(e) => updateContact({
+                      id: clientId,
+                      field: "clientId",
+                      value: e.target.value,
+                    })}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                </div>
               </div>
             </div>
 
