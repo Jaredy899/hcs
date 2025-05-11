@@ -72,9 +72,9 @@ export function ClientDetails({
   };
 
   const handleArchive = async () => {
-    if (confirm("Are you sure you want to archive this client?")) {
+    if (confirm("Are you sure you want to archive this consumer?")) {
       await archiveClient({ id: clientId });
-      toast.success("Client archived");
+      toast.success("Consumer archived");
       onClose();
     }
   };
@@ -107,8 +107,8 @@ export function ClientDetails({
         </div>
 
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-8">
-            <div className="bg-gray-50 rounded-lg p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4 lg:p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Contact Information</h3>
               <div className="space-y-4">
                 <div>
@@ -151,7 +151,7 @@ export function ClientDetails({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Client ID</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Consumer ID</label>
                   <input
                     type="text"
                     value={client.clientId}
@@ -166,7 +166,7 @@ export function ClientDetails({
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6">
+            <div className="bg-gray-50 rounded-lg p-4 lg:p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Important Dates</h3>
               <div className="space-y-6">
                 <div>
@@ -192,7 +192,7 @@ export function ClientDetails({
                           value: qrDates[0].date.getTime(),
                         });
                       }}
-                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
                     >
                       <option value="1">Jan</option>
                       <option value="2">Feb</option>
@@ -227,7 +227,7 @@ export function ClientDetails({
                           value: qrDates[0].date.getTime(),
                         });
                       }}
-                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
                     >
                       {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                         <option key={day} value={day}>{day}</option>
@@ -258,7 +258,7 @@ export function ClientDetails({
                   </div>
                   <div className="space-y-2 bg-white rounded-md p-3">
                     {getQuarterlyReviewDates(client.nextAnnualAssessment).map((qr, index) => (
-                      <div key={index} className="flex items-center gap-2">
+                      <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2">
                         <span className="text-sm font-medium text-gray-600 w-24">{qr.label}:</span>
                         <div className="flex items-center gap-2">
                           <select
@@ -274,7 +274,7 @@ export function ClientDetails({
                                 value: newDate.getTime(),
                               });
                             }}
-                            className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
                           >
                             <option value="1">Jan</option>
                             <option value="2">Feb</option>
@@ -302,7 +302,7 @@ export function ClientDetails({
                                 value: newDate.getTime(),
                               });
                             }}
-                            className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
                           >
                             {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                               <option key={day} value={day}>{day}</option>
@@ -317,8 +317,8 @@ export function ClientDetails({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
-            <div className="bg-gray-50 rounded-lg p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4 lg:p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Contact Status</h3>
               <div className="space-y-3">
                 <label className="flex items-center gap-3">
@@ -354,10 +354,10 @@ export function ClientDetails({
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6">
+            <div className="bg-gray-50 rounded-lg p-4 lg:p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Last Contact</h3>
               <div className="space-y-4">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => {
                       const today = new Date();
@@ -388,7 +388,7 @@ export function ClientDetails({
                           value: date.getTime(),
                         });
                       }}
-                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
                     >
                       <option value="1">Jan</option>
                       <option value="2">Feb</option>
@@ -415,7 +415,7 @@ export function ClientDetails({
                           value: date.getTime(),
                         });
                       }}
-                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
                     >
                       {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                         <option key={day} value={day}>{day}</option>
@@ -432,7 +432,7 @@ export function ClientDetails({
 
               <h3 className="font-semibold text-gray-900 mb-4 mt-6">Last Face to Face</h3>
               <div className="space-y-4">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => {
                       const today = new Date();
@@ -464,7 +464,7 @@ export function ClientDetails({
                           value: date.getTime(),
                         });
                       }}
-                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
                     >
                       <option value="1">Jan</option>
                       <option value="2">Feb</option>
@@ -492,7 +492,7 @@ export function ClientDetails({
                           value: date.getTime(),
                         });
                       }}
-                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
                     >
                       {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                         <option key={day} value={day}>{day}</option>
@@ -514,8 +514,8 @@ export function ClientDetails({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
-            <div className="bg-gray-50 rounded-lg p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4 lg:p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Todo List</h3>
               <form onSubmit={handleAddTodo} className="mb-4">
                 <input
@@ -549,7 +549,7 @@ export function ClientDetails({
               </ul>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6">
+            <div className="bg-gray-50 rounded-lg p-4 lg:p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Notes</h3>
               <form onSubmit={handleAddNote} className="mb-4">
                 <textarea

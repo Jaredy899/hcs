@@ -107,135 +107,269 @@ export function ClientList({
       </div>
 
       <div className="divide-y divide-gray-200">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Client
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Annual Assessment
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Last Contact
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Last Face to Face
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Next Face to Face
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {sortedClients.map((client) => {
-              const upcomingDates = getUpcomingDates(client);
-              const dueDates: Array<{ type: 'qr' | 'annual', text: string }> = [];
-              
-              if (upcomingDates.isQRDue) {
-                const qrDate = upcomingDates.qrDates.find(qr => qr.getMonth() + 1 === new Date().getMonth() + 1);
-                if (qrDate) {
+        {/* Desktop table view */}
+        <div className="hidden md:block">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Consumer
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Annual Assessment
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Last Contact
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Last Face to Face
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Next Face to Face
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {sortedClients.map((client) => {
+                const upcomingDates = getUpcomingDates(client);
+                const dueDates: Array<{ type: 'qr' | 'annual', text: string }> = [];
+                
+                if (upcomingDates.isQRDue) {
+                  const qrDate = upcomingDates.qrDates.find(qr => qr.getMonth() + 1 === new Date().getMonth() + 1);
+                  if (qrDate) {
+                    dueDates.push({
+                      type: 'qr',
+                      text: `QR due ${qrDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                    });
+                  }
+                }
+                
+                if (upcomingDates.isQ4) {
                   dueDates.push({
-                    type: 'qr',
-                    text: `QR due ${qrDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                    type: 'annual',
+                    text: `Annual Assessment due ${upcomingDates.annualDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                  });
+                } else if (upcomingDates.isAnnualDue) {
+                  dueDates.push({
+                    type: 'annual',
+                    text: `Annual Assessment due ${upcomingDates.annualDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
                   });
                 }
-              }
-              
-              if (upcomingDates.isQ4) {
-                dueDates.push({
-                  type: 'annual',
-                  text: `Annual Assessment due ${upcomingDates.annualDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-                });
-              } else if (upcomingDates.isAnnualDue) {
-                dueDates.push({
-                  type: 'annual',
-                  text: `Annual Assessment due ${upcomingDates.annualDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-                });
-              }
-              
-              return (
-                <tr
-                  key={client._id}
-                  className={`cursor-pointer transition-colors ${
-                    client._id === selectedClientId 
-                      ? "bg-indigo-50 hover:bg-indigo-100" 
-                      : "hover:bg-gray-50"
-                  }`}
-                  onClick={() => onSelectClient(client._id)}
-                >
-                  <td className="px-3 py-2">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">{client.name}</h3>
-                      <p className="text-xs text-gray-500">{client.phoneNumber}</p>
-                      <div className="flex gap-1 mt-1">
-                        {client.firstContactCompleted && (
-                          <span className="bg-green-100 text-green-800 text-xs px-1.5 py-0.5 rounded-full">
-                            1st Contact ✓
+                
+                return (
+                  <tr
+                    key={client._id}
+                    className={`cursor-pointer transition-colors ${
+                      client._id === selectedClientId 
+                        ? "bg-indigo-50 hover:bg-indigo-100" 
+                        : "hover:bg-gray-50"
+                    }`}
+                    onClick={() => onSelectClient(client._id)}
+                  >
+                    <td className="px-3 py-2">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">{client.name}</h3>
+                        <p className="text-xs text-gray-500">{client.phoneNumber}</p>
+                        <div className="flex gap-1 mt-1">
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                            client.firstContactCompleted 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-red-100 text-red-800"
+                          }`}>
+                            {client.firstContactCompleted ? "1st Contact ✓" : "1st Contact ✗"}
                           </span>
-                        )}
-                        {client.secondContactCompleted && (
-                          <span className="bg-green-100 text-green-800 text-xs px-1.5 py-0.5 rounded-full">
-                            2nd Contact ✓
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                            client.secondContactCompleted 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-red-100 text-red-800"
+                          }`}>
+                            {client.secondContactCompleted ? "2nd Contact ✓" : "2nd Contact ✗"}
                           </span>
+                        </div>
+                        {dueDates.length > 0 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            {dueDates.map((dueDate, index) => (
+                              <div key={index} className="flex items-center gap-1">
+                                <span className="text-red-600 text-xs font-medium">
+                                  {dueDate.text}
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMarkComplete(client._id, dueDate.type);
+                                  }}
+                                  className="text-green-600 hover:text-green-800"
+                                >
+                                  ✓
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
-                      {dueDates.length > 0 && (
-                        <div className="flex items-center gap-1 mt-1">
-                          {dueDates.map((dueDate, index) => (
-                            <div key={index} className="flex items-center gap-1">
-                              <span className="text-red-600 text-xs font-medium">
-                                {dueDate.text}
-                              </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleMarkComplete(client._id, dueDate.type);
-                                }}
-                                className="text-green-600 hover:text-green-800"
-                              >
-                                ✓
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
+                      {client.nextAnnualAssessment
+                        ? new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "Not set"}
+                    </td>
+                    <td className="px-3 py-2 text-xs font-bold text-gray-900">
+                      {client.lastContactDate
+                        ? new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                        : "No contact recorded"}
+                    </td>
+                    <td className="px-3 py-2 text-xs font-bold text-gray-900">
+                      {client.lastFaceToFaceDate
+                        ? new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                        : "No face to face recorded"}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
+                      {client.lastFaceToFaceDate
+                        ? new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "Not applicable"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile card view */}
+        <div className="md:hidden space-y-4">
+          {sortedClients.map((client) => {
+            const upcomingDates = getUpcomingDates(client);
+            const dueDates: Array<{ type: 'qr' | 'annual', text: string }> = [];
+            
+            if (upcomingDates.isQRDue) {
+              const qrDate = upcomingDates.qrDates.find(qr => qr.getMonth() + 1 === new Date().getMonth() + 1);
+              if (qrDate) {
+                dueDates.push({
+                  type: 'qr',
+                  text: `QR due ${qrDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                });
+              }
+            }
+            
+            if (upcomingDates.isQ4) {
+              dueDates.push({
+                type: 'annual',
+                text: `Annual Assessment due ${upcomingDates.annualDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+              });
+            } else if (upcomingDates.isAnnualDue) {
+              dueDates.push({
+                type: 'annual',
+                text: `Annual Assessment due ${upcomingDates.annualDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+              });
+            }
+
+            return (
+              <div
+                key={client._id}
+                className={`bg-white rounded-lg shadow p-4 cursor-pointer transition-colors ${
+                  client._id === selectedClientId ? "ring-2 ring-indigo-500" : ""
+                }`}
+                onClick={() => onSelectClient(client._id)}
+              >
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-base font-medium text-gray-900">{client.name}</h3>
+                    <p className="text-sm text-gray-500">{client.phoneNumber}</p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                      client.firstContactCompleted 
+                        ? "bg-green-100 text-green-800" 
+                        : "bg-red-100 text-red-800"
+                    }`}>
+                      {client.firstContactCompleted ? "1st Contact ✓" : "1st Contact ✗"}
+                    </span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                      client.secondContactCompleted 
+                        ? "bg-green-100 text-green-800" 
+                        : "bg-red-100 text-red-800"
+                    }`}>
+                      {client.secondContactCompleted ? "2nd Contact ✓" : "2nd Contact ✗"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-500">Annual Assessment</p>
+                      <p className="font-medium">
+                        {client.nextAnnualAssessment
+                          ? new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "Not set"}
+                      </p>
                     </div>
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
-                    {client.nextAnnualAssessment
-                      ? new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                        })
-                      : "Not set"}
-                  </td>
-                  <td className="px-3 py-2 text-xs font-bold text-gray-900">
-                    {client.lastContactDate
-                      ? new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                      : "No contact recorded"}
-                  </td>
-                  <td className="px-3 py-2 text-xs font-bold text-gray-900">
-                    {client.lastFaceToFaceDate
-                      ? new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                      : "No face to face recorded"}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
-                    {client.lastFaceToFaceDate
-                      ? new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                        })
-                      : "Not applicable"}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    <div>
+                      <p className="text-gray-500">Last Contact</p>
+                      <p className="font-medium">
+                        {client.lastContactDate
+                          ? new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                          : "No contact"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Last Face to Face</p>
+                      <p className="font-medium">
+                        {client.lastFaceToFaceDate
+                          ? new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                          : "No face to face"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Next Face to Face</p>
+                      <p className="font-medium">
+                        {client.lastFaceToFaceDate
+                          ? new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "Not applicable"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {dueDates.length > 0 && (
+                    <div className="space-y-2">
+                      {dueDates.map((dueDate, index) => (
+                        <div key={index} className="flex items-center justify-between bg-red-50 p-2 rounded">
+                          <span className="text-red-600 text-sm font-medium">
+                            {dueDate.text}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkComplete(client._id, dueDate.type);
+                            }}
+                            className="text-green-600 hover:text-green-800 bg-white px-2 py-1 rounded shadow-sm"
+                          >
+                            Mark Complete
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
         {clients.length === 0 && (
           <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-lg">
-            No clients yet
+            No consumers yet
           </div>
         )}
       </div>
