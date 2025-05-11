@@ -5,7 +5,7 @@ export function ThemeSwitcher() {
     if (typeof window !== "undefined") {
       return document.documentElement.classList.contains("dark");
     }
-    return false;
+    return true;
   });
 
   useEffect(() => {
