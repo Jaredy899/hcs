@@ -22,6 +22,7 @@ export const add = mutation({
     name: v.string(),
     phoneNumber: v.string(),
     insurance: v.string(),
+    clientId: v.string(),
     nextQuarterlyReview: v.number(),
     nextAnnualAssessment: v.number(),
   },
@@ -61,6 +62,7 @@ export const updateContact = mutation({
       v.literal("name"),
       v.literal("phoneNumber"),
       v.literal("insurance"),
+      v.literal("clientId"),
       v.literal("firstContactCompleted"),
       v.literal("secondContactCompleted"),
       v.literal("lastContactDate"),
@@ -68,7 +70,11 @@ export const updateContact = mutation({
       v.literal("nextQuarterlyReview"),
       v.literal("nextAnnualAssessment"),
       v.literal("lastQRCompleted"),
-      v.literal("lastAnnualCompleted")
+      v.literal("lastAnnualCompleted"),
+      v.literal("qr1Completed"),
+      v.literal("qr2Completed"),
+      v.literal("qr3Completed"),
+      v.literal("qr4Completed")
     ),
     value: v.union(v.string(), v.number(), v.boolean()),
   },

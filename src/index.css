@@ -5,6 +5,13 @@
 :root {
   --color-light: #ffffff;
   --color-dark: #171717;
+  color-scheme: light dark;
+}
+
+* {
+  transition-property: color, background-color, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
 }
 
 .accent-text {
@@ -34,6 +41,14 @@ body {
     "Noto Color Emoji";
   color: var(--color-dark);
   background: var(--color-light);
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Remove transition for specific elements that shouldn't animate */
+.no-transition,
+.no-transition * {
+  transition: none !important;
 }
 
 .input-field {

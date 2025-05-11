@@ -9,195 +9,106 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
     name: "",
     phoneNumber: "",
     insurance: "",
-    nextQuarterlyReview: {
-      month: new Date().getMonth() + 1,
-      day: 1
-    },
-    nextAnnualAssessment: {
-      month: new Date().getMonth() + 1,
-      day: 1
-    }
+    clientId: ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const today = new Date();
-      const qrDate = new Date(today.getFullYear(), formData.nextQuarterlyReview.month - 1, formData.nextQuarterlyReview.day);
-      const annualDate = new Date(today.getFullYear(), formData.nextAnnualAssessment.month - 1, formData.nextAnnualAssessment.day);
-      
-      await addClient({
-        name: formData.name,
-        phoneNumber: formData.phoneNumber,
-        insurance: formData.insurance,
-        nextQuarterlyReview: qrDate.getTime(),
-        nextAnnualAssessment: annualDate.getTime(),
-      });
-      toast.success("Client added successfully");
-      onClose();
-    } catch (error) {
-      toast.error("Failed to add client");
-    }
+    await addClient({
+      name: formData.name,
+      phoneNumber: formData.phoneNumber,
+      insurance: formData.insurance,
+      clientId: formData.clientId,
+      nextQuarterlyReview: new Date().getTime(),
+      nextAnnualAssessment: new Date().getTime()
+    });
+
+    setFormData({
+      name: "",
+      phoneNumber: "",
+      insurance: "",
+      clientId: ""
+    });
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6 sticky top-0 bg-white pb-4 border-b">
-          <div className="flex items-center gap-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Add New Consumer</h2>
             <button
               onClick={onClose}
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
             >
-              ← Back
+              <span className="sr-only">Close</span>
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-            <h2 className="text-2xl font-bold">Add New Client</h2>
           </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="insurance" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Insurance
+              </label>
+              <input
+                type="text"
+                id="insurance"
+                value={formData.insurance}
+                onChange={(e) => setFormData({ ...formData, insurance: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Consumer ID
+              </label>
+              <input
+                type="text"
+                id="clientId"
+                value={formData.clientId}
+                onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+            >
+              Add Consumer
+            </button>
+          </form>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              required
-              value={formData.phoneNumber}
-              onChange={(e) =>
-                setFormData({ ...formData, phoneNumber: e.target.value })
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Insurance
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.insurance}
-              onChange={(e) =>
-                setFormData({ ...formData, insurance: e.target.value })
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Next Quarterly Review
-            </label>
-            <div className="flex gap-2 mt-1">
-              <select
-                value={formData.nextQuarterlyReview.month}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  nextQuarterlyReview: {
-                    ...formData.nextQuarterlyReview,
-                    month: parseInt(e.target.value)
-                  }
-                })}
-                className="block w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              >
-                <option value="1">Jan</option>
-                <option value="2">Feb</option>
-                <option value="3">Mar</option>
-                <option value="4">Apr</option>
-                <option value="5">May</option>
-                <option value="6">Jun</option>
-                <option value="7">Jul</option>
-                <option value="8">Aug</option>
-                <option value="9">Sep</option>
-                <option value="10">Oct</option>
-                <option value="11">Nov</option>
-                <option value="12">Dec</option>
-              </select>
-              <select
-                value={formData.nextQuarterlyReview.day}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  nextQuarterlyReview: {
-                    ...formData.nextQuarterlyReview,
-                    day: parseInt(e.target.value)
-                  }
-                })}
-                className="block w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              >
-                {Array.from({length: 31}, (_, i) => i + 1).map(day => (
-                  <option key={day} value={day}>{day}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Next Annual Assessment
-            </label>
-            <div className="flex gap-2 mt-1">
-              <select
-                value={formData.nextAnnualAssessment.month}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  nextAnnualAssessment: {
-                    ...formData.nextAnnualAssessment,
-                    month: parseInt(e.target.value)
-                  }
-                })}
-                className="block w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              >
-                <option value="1">Jan</option>
-                <option value="2">Feb</option>
-                <option value="3">Mar</option>
-                <option value="4">Apr</option>
-                <option value="5">May</option>
-                <option value="6">Jun</option>
-                <option value="7">Jul</option>
-                <option value="8">Aug</option>
-                <option value="9">Sep</option>
-                <option value="10">Oct</option>
-                <option value="11">Nov</option>
-                <option value="12">Dec</option>
-              </select>
-              <select
-                value={formData.nextAnnualAssessment.day}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  nextAnnualAssessment: {
-                    ...formData.nextAnnualAssessment,
-                    day: parseInt(e.target.value)
-                  }
-                })}
-                className="block w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              >
-                {Array.from({length: 31}, (_, i) => i + 1).map(day => (
-                  <option key={day} value={day}>{day}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 transition-colors"
-          >
-            Add Client
-          </button>
-        </form>
       </div>
     </div>
   );

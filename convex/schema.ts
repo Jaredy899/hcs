@@ -8,6 +8,7 @@ const applicationTables = {
     caseManagerId: v.id("users"),
     phoneNumber: v.string(),
     insurance: v.string(),
+    clientId: v.optional(v.string()),
     firstContactCompleted: v.boolean(),
     secondContactCompleted: v.boolean(),
     lastContactDate: v.optional(v.number()),
@@ -16,6 +17,10 @@ const applicationTables = {
     nextAnnualAssessment: v.number(),
     lastQRCompleted: v.optional(v.number()),
     lastAnnualCompleted: v.optional(v.number()),
+    qr1Completed: v.optional(v.boolean()),
+    qr2Completed: v.optional(v.boolean()),
+    qr3Completed: v.optional(v.boolean()),
+    qr4Completed: v.optional(v.boolean()),
     archived: v.boolean(),
   })
     .index("by_case_manager", ["caseManagerId"])
