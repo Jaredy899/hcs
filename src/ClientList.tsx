@@ -109,7 +109,7 @@ export function ClientList({
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as 'first' | 'last')}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+          className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         >
           <option value="first">First Name</option>
           <option value="last">Last Name</option>
@@ -120,29 +120,29 @@ export function ClientList({
         {/* Desktop table view */}
         <div className="hidden md:block">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Consumer
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Annual Assessment
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Next QR
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Last Contact
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Last Face to Face
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Next Face to Face
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
               {sortedClients.map((client) => {
                 const upcomingDates = getUpcomingDates(client);
                 
@@ -151,15 +151,15 @@ export function ClientList({
                     key={client._id}
                     className={`cursor-pointer transition-colors ${
                       client._id === selectedClientId 
-                        ? "bg-indigo-50 hover:bg-indigo-100" 
-                        : "hover:bg-gray-50"
+                        ? "bg-indigo-50 dark:bg-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/70" 
+                        : "hover:bg-gray-50 dark:hover:bg-gray-800"
                     }`}
                     onClick={() => onSelectClient(client._id)}
                   >
                     <td className="px-3 py-2">
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900">{client.name}</h3>
-                        <p className="text-xs text-gray-500">{client.phoneNumber}</p>
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{client.name}</h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{client.phoneNumber}</p>
                         <div className="flex gap-1 mt-1">
                           <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                             client.firstContactCompleted 
@@ -178,7 +178,7 @@ export function ClientList({
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
                       {client.nextAnnualAssessment
                         ? new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
                             month: "short",
@@ -187,7 +187,7 @@ export function ClientList({
                           })
                         : "Not set"}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
                       {upcomingDates.nextQRDate ? (
                         <div className="flex items-center gap-1">
                           <span className={upcomingDates.isQRDue ? "text-red-600 font-medium" : ""}>
@@ -196,7 +196,7 @@ export function ClientList({
                               day: "numeric",
                             })}
                           </span>
-                          <span className="text-gray-500 text-xs">
+                          <span className="text-gray-500 text-xs dark:text-gray-400">
                             (Q{upcomingDates.nextQRIndex + 1})
                           </span>
                           <button
@@ -204,7 +204,7 @@ export function ClientList({
                               e.stopPropagation();
                               handleMarkComplete(client._id, 'qr');
                             }}
-                            className="text-green-600 hover:text-green-800"
+                            className="text-green-600 hover:text-green-800 dark:text-gray-400 dark:hover:text-gray-200"
                           >
                             ✓
                           </button>
@@ -213,17 +213,17 @@ export function ClientList({
                         "Not set"
                       )}
                     </td>
-                    <td className="px-3 py-2 text-xs font-bold text-gray-900">
+                    <td className="px-3 py-2 text-xs font-bold text-gray-900 dark:text-gray-100">
                       {client.lastContactDate
                         ? new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                         : "No contact recorded"}
                     </td>
-                    <td className="px-3 py-2 text-xs font-bold text-gray-900">
+                    <td className="px-3 py-2 text-xs font-bold text-gray-900 dark:text-gray-100">
                       {client.lastFaceToFaceDate
                         ? new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                         : "No face to face recorded"}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
                       {client.lastFaceToFaceDate
                         ? new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, {
                             month: "short",
@@ -246,15 +246,15 @@ export function ClientList({
             return (
               <div
                 key={client._id}
-                className={`bg-white rounded-lg shadow p-4 cursor-pointer transition-colors ${
+                className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 cursor-pointer transition-colors ${
                   client._id === selectedClientId ? "ring-2 ring-indigo-500" : ""
                 }`}
                 onClick={() => onSelectClient(client._id)}
               >
                 <div className="space-y-3">
                   <div>
-                    <h3 className="text-base font-medium text-gray-900">{client.name}</h3>
-                    <p className="text-sm text-gray-500">{client.phoneNumber}</p>
+                    <h3 className="text-base font-medium text-gray-900 dark:text-gray-100">{client.name}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{client.phoneNumber}</p>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
@@ -321,7 +321,7 @@ export function ClientList({
         </div>
 
         {clients.length === 0 && (
-          <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-lg">
+          <div className="p-4 text-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg">
             No consumers yet
           </div>
         )}
