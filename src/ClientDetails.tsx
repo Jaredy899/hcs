@@ -54,6 +54,13 @@ export function ClientDetails({
 
   const [newTodo, setNewTodo] = useState("");
   const [newNote, setNewNote] = useState("");
+  const [annualMonth, setAnnualMonth] = useState(0);
+  const [annualDay, setAnnualDay] = useState(0);
+
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
 
   if (!client) return null;
 
@@ -170,99 +177,51 @@ export function ClientDetails({
               <h3 className="font-semibold text-gray-900 mb-4">Important Dates</h3>
               <div className="space-y-6">
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Annual Assessment</p>
-                  <div className="flex gap-2">
+                  <label className="block text-sm font-medium text-gray-700">Annual Assessment Date</label>
+                  <div className="mt-1 flex gap-2">
                     <select
-                      id="annualAssessmentMonth"
-                      defaultValue={new Date(client.nextAnnualAssessment).getMonth() + 1}
+                      value={annualMonth}
                       onChange={(e) => {
-                        const month = parseInt(e.target.value);
-                        const day = parseInt((document.getElementById('annualAssessmentDay') as HTMLSelectElement)?.value || '1');
-                        const year = parseInt((document.getElementById('annualAssessmentYear') as HTMLSelectElement)?.value || new Date().getFullYear().toString());
-                        const date = new Date(year, month - 1, day);
+                        const newMonth = parseInt(e.target.value);
+                        setAnnualMonth(newMonth);
+                        const annualDate = new Date(new Date().getFullYear(), newMonth - 1, annualDay);
                         updateContact({
                           id: clientId,
                           field: "nextAnnualAssessment",
-                          value: date.getTime(),
-                        });
-                        const qrDates = getQuarterlyReviewDates(date.getTime());
-                        updateContact({
-                          id: clientId,
-                          field: "nextQuarterlyReview",
-                          value: qrDates[0].date.getTime(),
+                          value: annualDate.getTime(),
                         });
                       }}
-                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                     >
-                      <option value="1">Jan</option>
-                      <option value="2">Feb</option>
-                      <option value="3">Mar</option>
-                      <option value="4">Apr</option>
-                      <option value="5">May</option>
-                      <option value="6">Jun</option>
-                      <option value="7">Jul</option>
-                      <option value="8">Aug</option>
-                      <option value="9">Sep</option>
-                      <option value="10">Oct</option>
-                      <option value="11">Nov</option>
-                      <option value="12">Dec</option>
-                    </select>
-                    <select
-                      id="annualAssessmentDay"
-                      defaultValue={new Date(client.nextAnnualAssessment).getDate()}
-                      onChange={(e) => {
-                        const month = parseInt((document.getElementById('annualAssessmentMonth') as HTMLSelectElement)?.value || '1');
-                        const day = parseInt(e.target.value);
-                        const year = parseInt((document.getElementById('annualAssessmentYear') as HTMLSelectElement)?.value || new Date().getFullYear().toString());
-                        const date = new Date(year, month - 1, day);
-                        updateContact({
-                          id: clientId,
-                          field: "nextAnnualAssessment",
-                          value: date.getTime(),
-                        });
-                        const qrDates = getQuarterlyReviewDates(date.getTime());
-                        updateContact({
-                          id: clientId,
-                          field: "nextQuarterlyReview",
-                          value: qrDates[0].date.getTime(),
-                        });
-                      }}
-                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
-                    >
-                      {Array.from({length: 31}, (_, i) => i + 1).map(day => (
-                        <option key={day} value={day}>{day}</option>
+                      <option value="">Select Month</option>
+                      {months.map((month, index) => (
+                        <option key={month} value={index + 1}>
+                          {month}
+                        </option>
                       ))}
                     </select>
                     <select
-                      id="annualAssessmentYear"
-                      defaultValue={new Date(client.nextAnnualAssessment).getFullYear()}
+                      value={annualDay}
                       onChange={(e) => {
-                        const month = parseInt((document.getElementById('annualAssessmentMonth') as HTMLSelectElement)?.value || '1');
-                        const day = parseInt((document.getElementById('annualAssessmentDay') as HTMLSelectElement)?.value || '1');
-                        const year = parseInt(e.target.value);
-                        const date = new Date(year, month - 1, day);
+                        const newDay = parseInt(e.target.value);
+                        setAnnualDay(newDay);
+                        const annualDate = new Date(new Date().getFullYear(), annualMonth - 1, newDay);
                         updateContact({
                           id: clientId,
                           field: "nextAnnualAssessment",
-                          value: date.getTime(),
-                        });
-                        const qrDates = getQuarterlyReviewDates(date.getTime());
-                        updateContact({
-                          id: clientId,
-                          field: "nextQuarterlyReview",
-                          value: qrDates[0].date.getTime(),
+                          value: annualDate.getTime(),
                         });
                       }}
-                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                     >
-                      {Array.from({length: 5}, (_, i) => new Date().getFullYear() + i).map(year => (
-                        <option key={year} value={year}>{year}</option>
+                      <option value="">Select Day</option>
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                        <option key={day} value={day}>
+                          {day}
+                        </option>
                       ))}
                     </select>
                   </div>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Current: {new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                  </p>
                 </div>
 
                 <div>

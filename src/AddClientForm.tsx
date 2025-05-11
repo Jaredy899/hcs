@@ -9,38 +9,26 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
     name: "",
     phoneNumber: "",
     insurance: "",
-    clientId: "",
-    nextQuarterlyReview: {
-      month: new Date().getMonth() + 1,
-      day: 1
-    },
-    nextAnnualAssessment: {
-      month: new Date().getMonth() + 1,
-      day: 1,
-      year: new Date().getFullYear()
-    }
+    clientId: ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const today = new Date();
-      const qrDate = new Date(today.getFullYear(), formData.nextQuarterlyReview.month - 1, formData.nextQuarterlyReview.day);
-      const annualDate = new Date(formData.nextAnnualAssessment.year, formData.nextAnnualAssessment.month - 1, formData.nextAnnualAssessment.day);
-      
-      await addClient({
-        name: formData.name,
-        phoneNumber: formData.phoneNumber,
-        insurance: formData.insurance,
-        clientId: formData.clientId,
-        nextQuarterlyReview: qrDate.getTime(),
-        nextAnnualAssessment: annualDate.getTime(),
-      });
-      toast.success("Consumer added successfully");
-      onClose();
-    } catch (error) {
-      toast.error("Failed to add consumer");
-    }
+    await addClient({
+      name: formData.name,
+      phoneNumber: formData.phoneNumber,
+      insurance: formData.insurance,
+      clientId: formData.clientId,
+      nextQuarterlyReview: new Date().getTime(),
+      nextAnnualAssessment: new Date().getTime()
+    });
+
+    setFormData({
+      name: "",
+      phoneNumber: "",
+      insurance: "",
+      clientId: ""
+    });
   };
 
   return (
@@ -60,119 +48,65 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                <input
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Insurance</label>
-                <input
-                  type="text"
-                  value={formData.insurance}
-                  onChange={(e) => setFormData({ ...formData, insurance: e.target.value })}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Consumer ID</label>
-                <input
-                  type="text"
-                  value={formData.clientId}
-                  onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  required
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              />
             </div>
 
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-gray-900">Annual Assessment Date</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
-                  <select
-                    value={formData.nextAnnualAssessment.month}
-                    onChange={(e) => setFormData({ ...formData, nextAnnualAssessment: { ...formData.nextAnnualAssessment, month: parseInt(e.target.value) } })}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    required
-                  >
-                    <option value="1">January</option>
-                    <option value="2">February</option>
-                    <option value="3">March</option>
-                    <option value="4">April</option>
-                    <option value="5">May</option>
-                    <option value="6">June</option>
-                    <option value="7">July</option>
-                    <option value="8">August</option>
-                    <option value="9">September</option>
-                    <option value="10">October</option>
-                    <option value="11">November</option>
-                    <option value="12">December</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Day</label>
-                  <select
-                    value={formData.nextAnnualAssessment.day}
-                    onChange={(e) => setFormData({ ...formData, nextAnnualAssessment: { ...formData.nextAnnualAssessment, day: parseInt(e.target.value) } })}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    required
-                  >
-                    {Array.from({length: 31}, (_, i) => i + 1).map(day => (
-                      <option key={day} value={day}>{day}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                  <select
-                    value={formData.nextAnnualAssessment.year}
-                    onChange={(e) => setFormData({ ...formData, nextAnnualAssessment: { ...formData.nextAnnualAssessment, year: parseInt(e.target.value) } })}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    required
-                  >
-                    {Array.from({length: 5}, (_, i) => new Date().getFullYear() + i).map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              />
             </div>
 
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Add Consumer
-              </button>
+            <div>
+              <label htmlFor="insurance" className="block text-sm font-medium text-gray-700">
+                Insurance
+              </label>
+              <input
+                type="text"
+                id="insurance"
+                value={formData.insurance}
+                onChange={(e) => setFormData({ ...formData, insurance: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              />
             </div>
+
+            <div>
+              <label htmlFor="clientId" className="block text-sm font-medium text-gray-700">
+                Consumer ID
+              </label>
+              <input
+                type="text"
+                id="clientId"
+                value={formData.clientId}
+                onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Add Consumer
+            </button>
           </form>
         </div>
       </div>

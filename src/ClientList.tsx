@@ -183,6 +183,7 @@ export function ClientList({
                         ? new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
                             month: "short",
                             day: "numeric",
+                            year: undefined
                           })
                         : "Not set"}
                     </td>
