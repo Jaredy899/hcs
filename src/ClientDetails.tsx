@@ -178,8 +178,8 @@ export function ClientDetails({
                       onChange={(e) => {
                         const month = parseInt(e.target.value);
                         const day = parseInt((document.getElementById('annualAssessmentDay') as HTMLSelectElement)?.value || '1');
-                        const existingDate = new Date(client.nextAnnualAssessment);
-                        const date = new Date(existingDate.getFullYear(), month - 1, day);
+                        const year = parseInt((document.getElementById('annualAssessmentYear') as HTMLSelectElement)?.value || new Date().getFullYear().toString());
+                        const date = new Date(year, month - 1, day);
                         updateContact({
                           id: clientId,
                           field: "nextAnnualAssessment",
@@ -213,8 +213,8 @@ export function ClientDetails({
                       onChange={(e) => {
                         const month = parseInt((document.getElementById('annualAssessmentMonth') as HTMLSelectElement)?.value || '1');
                         const day = parseInt(e.target.value);
-                        const existingDate = new Date(client.nextAnnualAssessment);
-                        const date = new Date(existingDate.getFullYear(), month - 1, day);
+                        const year = parseInt((document.getElementById('annualAssessmentYear') as HTMLSelectElement)?.value || new Date().getFullYear().toString());
+                        const date = new Date(year, month - 1, day);
                         updateContact({
                           id: clientId,
                           field: "nextAnnualAssessment",
@@ -231,6 +231,32 @@ export function ClientDetails({
                     >
                       {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                         <option key={day} value={day}>{day}</option>
+                      ))}
+                    </select>
+                    <select
+                      id="annualAssessmentYear"
+                      defaultValue={new Date(client.nextAnnualAssessment).getFullYear()}
+                      onChange={(e) => {
+                        const month = parseInt((document.getElementById('annualAssessmentMonth') as HTMLSelectElement)?.value || '1');
+                        const day = parseInt((document.getElementById('annualAssessmentDay') as HTMLSelectElement)?.value || '1');
+                        const year = parseInt(e.target.value);
+                        const date = new Date(year, month - 1, day);
+                        updateContact({
+                          id: clientId,
+                          field: "nextAnnualAssessment",
+                          value: date.getTime(),
+                        });
+                        const qrDates = getQuarterlyReviewDates(date.getTime());
+                        updateContact({
+                          id: clientId,
+                          field: "nextQuarterlyReview",
+                          value: qrDates[0].date.getTime(),
+                        });
+                      }}
+                      className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
+                    >
+                      {Array.from({length: 5}, (_, i) => new Date().getFullYear() + i).map(year => (
+                        <option key={year} value={year}>{year}</option>
                       ))}
                     </select>
                   </div>
@@ -257,60 +283,78 @@ export function ClientDetails({
                     </button>
                   </div>
                   <div className="space-y-2 bg-white rounded-md p-3">
-                    {getQuarterlyReviewDates(client.nextAnnualAssessment).map((qr, index) => (
-                      <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <span className="text-sm font-medium text-gray-600 w-24">{qr.label}:</span>
-                        <div className="flex items-center gap-2">
-                          <select
-                            value={new Date(qr.date).getMonth() + 1}
-                            onChange={(e) => {
-                              const month = parseInt(e.target.value);
-                              const day = new Date(qr.date).getDate();
-                              const year = new Date(qr.date).getFullYear();
-                              const newDate = new Date(year, month - 1, day);
-                              updateContact({
-                                id: clientId,
-                                field: "nextQuarterlyReview",
-                                value: newDate.getTime(),
-                              });
-                            }}
-                            className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
-                          >
-                            <option value="1">Jan</option>
-                            <option value="2">Feb</option>
-                            <option value="3">Mar</option>
-                            <option value="4">Apr</option>
-                            <option value="5">May</option>
-                            <option value="6">Jun</option>
-                            <option value="7">Jul</option>
-                            <option value="8">Aug</option>
-                            <option value="9">Sep</option>
-                            <option value="10">Oct</option>
-                            <option value="11">Nov</option>
-                            <option value="12">Dec</option>
-                          </select>
-                          <select
-                            value={new Date(qr.date).getDate()}
-                            onChange={(e) => {
-                              const month = new Date(qr.date).getMonth() + 1;
-                              const day = parseInt(e.target.value);
-                              const year = new Date(qr.date).getFullYear();
-                              const newDate = new Date(year, month - 1, day);
-                              updateContact({
-                                id: clientId,
-                                field: "nextQuarterlyReview",
-                                value: newDate.getTime(),
-                              });
-                            }}
-                            className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
-                          >
-                            {Array.from({length: 31}, (_, i) => i + 1).map(day => (
-                              <option key={day} value={day}>{day}</option>
-                            ))}
-                          </select>
+                    {getQuarterlyReviewDates(client.nextAnnualAssessment).map((qr, index) => {
+                      const qrField = `qr${index + 1}Completed` as "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed";
+                      return (
+                        <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <span className="text-sm font-medium text-gray-600 w-24">{qr.label}:</span>
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={new Date(qr.date).getMonth() + 1}
+                              onChange={(e) => {
+                                const month = parseInt(e.target.value);
+                                const day = new Date(qr.date).getDate();
+                                const year = new Date(qr.date).getFullYear();
+                                const newDate = new Date(year, month - 1, day);
+                                updateContact({
+                                  id: clientId,
+                                  field: "nextQuarterlyReview",
+                                  value: newDate.getTime(),
+                                });
+                              }}
+                              className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
+                            >
+                              <option value="1">Jan</option>
+                              <option value="2">Feb</option>
+                              <option value="3">Mar</option>
+                              <option value="4">Apr</option>
+                              <option value="5">May</option>
+                              <option value="6">Jun</option>
+                              <option value="7">Jul</option>
+                              <option value="8">Aug</option>
+                              <option value="9">Sep</option>
+                              <option value="10">Oct</option>
+                              <option value="11">Nov</option>
+                              <option value="12">Dec</option>
+                            </select>
+                            <select
+                              value={new Date(qr.date).getDate()}
+                              onChange={(e) => {
+                                const month = new Date(qr.date).getMonth() + 1;
+                                const day = parseInt(e.target.value);
+                                const year = new Date(qr.date).getFullYear();
+                                const newDate = new Date(year, month - 1, day);
+                                updateContact({
+                                  id: clientId,
+                                  field: "nextQuarterlyReview",
+                                  value: newDate.getTime(),
+                                });
+                              }}
+                              className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1"
+                            >
+                              {Array.from({length: 31}, (_, i) => i + 1).map(day => (
+                                <option key={day} value={day}>{day}</option>
+                              ))}
+                            </select>
+                            <label className="flex items-center gap-1 ml-2">
+                              <input
+                                type="checkbox"
+                                checked={client[qrField] || false}
+                                onChange={(e) => {
+                                  updateContact({
+                                    id: clientId,
+                                    field: qrField,
+                                    value: e.target.checked,
+                                  });
+                                }}
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="text-sm text-gray-600">Completed</span>
+                            </label>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>

@@ -17,6 +17,10 @@ const applicationTables = {
     nextAnnualAssessment: v.number(),
     lastQRCompleted: v.optional(v.number()),
     lastAnnualCompleted: v.optional(v.number()),
+    qr1Completed: v.optional(v.boolean()),
+    qr2Completed: v.optional(v.boolean()),
+    qr3Completed: v.optional(v.boolean()),
+    qr4Completed: v.optional(v.boolean()),
     archived: v.boolean(),
   })
     .index("by_case_manager", ["caseManagerId"])

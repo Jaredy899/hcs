@@ -16,7 +16,8 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
     },
     nextAnnualAssessment: {
       month: new Date().getMonth() + 1,
-      day: 1
+      day: 1,
+      year: new Date().getFullYear()
     }
   });
 
@@ -25,7 +26,7 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
     try {
       const today = new Date();
       const qrDate = new Date(today.getFullYear(), formData.nextQuarterlyReview.month - 1, formData.nextQuarterlyReview.day);
-      const annualDate = new Date(today.getFullYear(), formData.nextAnnualAssessment.month - 1, formData.nextAnnualAssessment.day);
+      const annualDate = new Date(formData.nextAnnualAssessment.year, formData.nextAnnualAssessment.month - 1, formData.nextAnnualAssessment.day);
       
       await addClient({
         name: formData.name,
@@ -105,7 +106,7 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
 
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-gray-900">Annual Assessment Date</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
                   <select
@@ -138,6 +139,19 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
                   >
                     {Array.from({length: 31}, (_, i) => i + 1).map(day => (
                       <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                  <select
+                    value={formData.nextAnnualAssessment.year}
+                    onChange={(e) => setFormData({ ...formData, nextAnnualAssessment: { ...formData.nextAnnualAssessment, year: parseInt(e.target.value) } })}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  >
+                    {Array.from({length: 5}, (_, i) => new Date().getFullYear() + i).map(year => (
+                      <option key={year} value={year}>{year}</option>
                     ))}
                   </select>
                 </div>

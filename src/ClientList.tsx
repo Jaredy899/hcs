@@ -14,10 +14,18 @@ function getUpcomingDates(client: any) {
 
   // Get quarterly review dates
   const qrDates = getQuarterlyReviewDates(client.nextAnnualAssessment);
-  const isQRDue = qrDates.some(qr => {
-    const qrMonth = qr.getMonth() + 1;
-    return qrMonth === currentMonth && !client.lastQRCompleted;
-  });
+  
+  // Find the next QR date based on completed QRs
+  let nextQRIndex = 0;
+  if (client.qr1Completed) nextQRIndex = 1;
+  if (client.qr2Completed) nextQRIndex = 2;
+  if (client.qr3Completed) nextQRIndex = 3;
+  if (client.qr4Completed) nextQRIndex = 0; // Reset to Q1 if all are completed
+  
+  const nextQRDate = qrDates[nextQRIndex];
+
+  // Only show red if the QR is due in the current month
+  const isQRDue = nextQRDate && nextQRDate.getMonth() + 1 === currentMonth;
 
   // If it's Q4, we need to show both QR and Annual Assessment
   const isQ4 = qrDates.some(qr => {
@@ -30,7 +38,9 @@ function getUpcomingDates(client: any) {
     isQRDue,
     isQ4,
     annualDate: annualDate,
-    qrDates: qrDates
+    qrDates: qrDates,
+    nextQRDate: nextQRDate,
+    nextQRIndex: nextQRIndex
   };
 }
 
@@ -119,6 +129,9 @@ export function ClientList({
                   Annual Assessment
                 </th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Next QR
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Last Contact
                 </th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -132,29 +145,6 @@ export function ClientList({
             <tbody className="bg-white divide-y divide-gray-200">
               {sortedClients.map((client) => {
                 const upcomingDates = getUpcomingDates(client);
-                const dueDates: Array<{ type: 'qr' | 'annual', text: string }> = [];
-                
-                if (upcomingDates.isQRDue) {
-                  const qrDate = upcomingDates.qrDates.find(qr => qr.getMonth() + 1 === new Date().getMonth() + 1);
-                  if (qrDate) {
-                    dueDates.push({
-                      type: 'qr',
-                      text: `QR due ${qrDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-                    });
-                  }
-                }
-                
-                if (upcomingDates.isQ4) {
-                  dueDates.push({
-                    type: 'annual',
-                    text: `Annual Assessment due ${upcomingDates.annualDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-                  });
-                } else if (upcomingDates.isAnnualDue) {
-                  dueDates.push({
-                    type: 'annual',
-                    text: `Annual Assessment due ${upcomingDates.annualDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-                  });
-                }
                 
                 return (
                   <tr
@@ -186,26 +176,6 @@ export function ClientList({
                             {client.secondContactCompleted ? "2nd Contact ✓" : "2nd Contact ✗"}
                           </span>
                         </div>
-                        {dueDates.length > 0 && (
-                          <div className="flex items-center gap-1 mt-1">
-                            {dueDates.map((dueDate, index) => (
-                              <div key={index} className="flex items-center gap-1">
-                                <span className="text-red-600 text-xs font-medium">
-                                  {dueDate.text}
-                                </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleMarkComplete(client._id, dueDate.type);
-                                  }}
-                                  className="text-green-600 hover:text-green-800"
-                                >
-                                  ✓
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
@@ -215,6 +185,32 @@ export function ClientList({
                             day: "numeric",
                           })
                         : "Not set"}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
+                      {upcomingDates.nextQRDate ? (
+                        <div className="flex items-center gap-1">
+                          <span className={upcomingDates.isQRDue ? "text-red-600 font-medium" : ""}>
+                            {upcomingDates.nextQRDate.toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                          <span className="text-gray-500 text-xs">
+                            (Q{upcomingDates.nextQRIndex + 1})
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkComplete(client._id, 'qr');
+                            }}
+                            className="text-green-600 hover:text-green-800"
+                          >
+                            ✓
+                          </button>
+                        </div>
+                      ) : (
+                        "Not set"
+                      )}
                     </td>
                     <td className="px-3 py-2 text-xs font-bold text-gray-900">
                       {client.lastContactDate
@@ -245,30 +241,7 @@ export function ClientList({
         <div className="md:hidden space-y-4">
           {sortedClients.map((client) => {
             const upcomingDates = getUpcomingDates(client);
-            const dueDates: Array<{ type: 'qr' | 'annual', text: string }> = [];
             
-            if (upcomingDates.isQRDue) {
-              const qrDate = upcomingDates.qrDates.find(qr => qr.getMonth() + 1 === new Date().getMonth() + 1);
-              if (qrDate) {
-                dueDates.push({
-                  type: 'qr',
-                  text: `QR due ${qrDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-                });
-              }
-            }
-            
-            if (upcomingDates.isQ4) {
-              dueDates.push({
-                type: 'annual',
-                text: `Annual Assessment due ${upcomingDates.annualDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-              });
-            } else if (upcomingDates.isAnnualDue) {
-              dueDates.push({
-                type: 'annual',
-                text: `Annual Assessment due ${upcomingDates.annualDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-              });
-            }
-
             return (
               <div
                 key={client._id}
@@ -340,27 +313,6 @@ export function ClientList({
                       </p>
                     </div>
                   </div>
-
-                  {dueDates.length > 0 && (
-                    <div className="space-y-2">
-                      {dueDates.map((dueDate, index) => (
-                        <div key={index} className="flex items-center justify-between bg-red-50 p-2 rounded">
-                          <span className="text-red-600 text-sm font-medium">
-                            {dueDate.text}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMarkComplete(client._id, dueDate.type);
-                            }}
-                            className="text-green-600 hover:text-green-800 bg-white px-2 py-1 rounded shadow-sm"
-                          >
-                            Mark Complete
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             );
