@@ -251,69 +251,9 @@ export function ClientList({
                 }`}
                 onClick={() => onSelectClient(client._id)}
               >
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-base font-medium text-gray-900 dark:text-gray-100">{client.name}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{client.phoneNumber}</p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                      client.firstContactCompleted 
-                        ? "bg-green-100 text-green-800" 
-                        : "bg-red-100 text-red-800"
-                    }`}>
-                      {client.firstContactCompleted ? "1st Contact ✓" : "1st Contact ✗"}
-                    </span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                      client.secondContactCompleted 
-                        ? "bg-green-100 text-green-800" 
-                        : "bg-red-100 text-red-800"
-                    }`}>
-                      {client.secondContactCompleted ? "2nd Contact ✓" : "2nd Contact ✗"}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-gray-500">Annual Assessment</p>
-                      <p className="font-medium">
-                        {client.nextAnnualAssessment
-                          ? new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : "Not set"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Last Contact</p>
-                      <p className="font-medium">
-                        {client.lastContactDate
-                          ? new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                          : "No contact"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Last Face to Face</p>
-                      <p className="font-medium">
-                        {client.lastFaceToFaceDate
-                          ? new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                          : "No face to face"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Next Face to Face</p>
-                      <p className="font-medium">
-                        {client.lastFaceToFaceDate
-                          ? new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : "Not applicable"}
-                      </p>
-                    </div>
-                  </div>
+                <div>
+                  <h3 className="text-base font-medium text-gray-900 dark:text-gray-100">{client.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{client.phoneNumber}</p>
                 </div>
               </div>
             );
