@@ -85,6 +85,7 @@ export function ClientList({
   const clients = useQuery(api.clients.list) || [];
   const updateClient = useMutation(api.clients.updateContact);
   const [sortBy, setSortBy] = useState<'first' | 'last'>('last');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Sort clients based on selected option
   const sortedClients = [...clients].sort((a, b) => {
@@ -100,6 +101,11 @@ export function ClientList({
     }
   });
 
+  // Filter clients based on search term
+  const filteredClients = sortedClients.filter(client => 
+    client.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const handleMarkComplete = async (clientId: Id<"clients">, type: 'qr' | 'annual') => {
     const today = new Date().getTime();
     await updateClient({
@@ -111,16 +117,31 @@ export function ClientList({
 
   return (
     <div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Sort by:</label>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as 'first' | 'last')}
-          className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-        >
-          <option value="first">First Name</option>
-          <option value="last">Last Name</option>
-        </select>
+      <div className="mb-4 space-y-4">
+        <div>
+          <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Search Clients
+          </label>
+          <input
+            type="text"
+            id="search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name..."
+            className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sort by:</label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'first' | 'last')}
+            className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          >
+            <option value="first">First Name</option>
+            <option value="last">Last Name</option>
+          </select>
+        </div>
       </div>
 
       <div className="divide-y divide-gray-200">
@@ -129,28 +150,28 @@ export function ClientList({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Consumer
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Annual Assessment
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Next QR
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Last Contact
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Last Face to Face
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Next Face to Face
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-              {sortedClients.map((client) => {
+              {filteredClients.map((client) => {
                 const upcomingDates = getUpcomingDates(client);
                 
                 return (
@@ -164,10 +185,10 @@ export function ClientList({
                     onClick={() => onSelectClient(client._id)}
                   >
                     <td className="px-3 py-2">
-                      <div>
+                      <div className="text-center">
                         <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{client.name}</h3>
                         <p className="text-xs text-gray-500 dark:text-gray-400">{client.phoneNumber}</p>
-                        <div className="flex gap-1 mt-1">
+                        <div className="flex gap-1 mt-1 justify-center">
                           <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                             client.firstContactCompleted 
                               ? "bg-green-100 text-green-800" 
@@ -185,7 +206,7 @@ export function ClientList({
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
                       {client.nextAnnualAssessment
                         ? new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
                             month: "short",
@@ -194,9 +215,9 @@ export function ClientList({
                           })
                         : "Not set"}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
                       {upcomingDates.nextQRDate ? (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center justify-center gap-1">
                           <span className={upcomingDates.isQRDue ? "text-red-600 font-medium" : ""}>
                             {upcomingDates.nextQRDate.toLocaleDateString(undefined, {
                               month: "short",
@@ -206,31 +227,22 @@ export function ClientList({
                           <span className="text-gray-500 text-xs dark:text-gray-400">
                             (Q{upcomingDates.nextQRIndex + 1})
                           </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMarkComplete(client._id, 'qr');
-                            }}
-                            className="text-green-600 hover:text-green-800 dark:text-gray-400 dark:hover:text-gray-200"
-                          >
-                            ✓
-                          </button>
                         </div>
                       ) : (
                         "Not set"
                       )}
                     </td>
-                    <td className="px-3 py-2 text-xs font-bold text-gray-900 dark:text-gray-100">
+                    <td className="px-3 py-2 text-center text-xs font-bold text-gray-900 dark:text-gray-100">
                       {client.lastContactDate
                         ? new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                         : "No contact recorded"}
                     </td>
-                    <td className="px-3 py-2 text-xs font-bold text-gray-900 dark:text-gray-100">
+                    <td className="px-3 py-2 text-center text-xs font-bold text-gray-900 dark:text-gray-100">
                       {client.lastFaceToFaceDate
                         ? new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                         : "No face to face recorded"}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
                       {client.lastFaceToFaceDate
                         ? new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, {
                             month: "short",
@@ -247,7 +259,7 @@ export function ClientList({
 
         {/* Mobile card view */}
         <div className="md:hidden space-y-4">
-          {sortedClients.map((client) => {
+          {filteredClients.map((client) => {
             const upcomingDates = getUpcomingDates(client);
             
             return (
