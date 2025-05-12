@@ -75,6 +75,10 @@ function Content({
     );
   }
 
+  const handleCloseClient = () => {
+    setSelectedClientId(null);
+  };
+
   return (
     <div className="flex flex-col gap-8">
       <Unauthenticated>
@@ -98,6 +102,7 @@ function Content({
             <ClientList
               selectedClientId={selectedClientId}
               onSelectClient={setSelectedClientId}
+              onCloseClient={handleCloseClient}
             />
           </div>
           {showAddClient && (
@@ -106,7 +111,7 @@ function Content({
           {selectedClientId && (
             <ClientDetails
               clientId={selectedClientId}
-              onClose={() => setSelectedClientId(null)}
+              onClose={handleCloseClient}
             />
           )}
         </div>

@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
-import { useState, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, useEffect } from "react";
 
 function getUpcomingDates(client: any) {
   const today = new Date();
@@ -78,14 +78,23 @@ function getQuarterlyReviewDates(annualAssessmentDate: number) {
 export function ClientList({
   selectedClientId,
   onSelectClient,
+  onCloseClient,
 }: {
   selectedClientId: Id<"clients"> | null;
   onSelectClient: (id: Id<"clients">) => void;
+  onCloseClient: () => void;
 }) {
   const clients = useQuery(api.clients.list) || [];
   const updateClient = useMutation(api.clients.updateContact);
   const [sortBy, setSortBy] = useState<'first' | 'last'>('last');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Clear search when client is deselected
+  useEffect(() => {
+    if (!selectedClientId) {
+      setSearchTerm('');
+    }
+  }, [selectedClientId]);
 
   // Sort clients based on selected option
   const sortedClients = [...clients].sort((a, b) => {
