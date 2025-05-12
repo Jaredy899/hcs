@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
-import { useState } from "react";
+import { useState, KeyboardEvent } from "react";
 
 function getUpcomingDates(client: any) {
   const today = new Date();
@@ -106,6 +106,17 @@ export function ClientList({
     client.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && filteredClients.length === 1) {
+      onSelectClient(filteredClients[0]._id);
+    } else if (e.key === 'Escape') {
+      setSearchTerm('');
+      if (selectedClientId) {
+        onSelectClient(null as any); // Clear selection
+      }
+    }
+  };
+
   const handleMarkComplete = async (clientId: Id<"clients">, type: 'qr' | 'annual') => {
     const today = new Date().getTime();
     await updateClient({
@@ -127,7 +138,8 @@ export function ClientList({
             id="search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name..."
+            onKeyDown={handleKeyDown}
+            placeholder="Search by name... (Press Enter when one result, Esc to clear)"
             className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
         </div>
