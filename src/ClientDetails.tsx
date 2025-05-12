@@ -57,13 +57,13 @@ export function ClientDetails({
     if (client?.nextAnnualAssessment) {
       return new Date(client.nextAnnualAssessment).getMonth() + 1;
     }
-    return 0;
+    return new Date().getMonth() + 1;
   });
   const [annualDay, setAnnualDay] = useState(() => {
     if (client?.nextAnnualAssessment) {
       return new Date(client.nextAnnualAssessment).getDate();
     }
-    return 0;
+    return 1;
   });
 
   const months = [
@@ -199,6 +199,13 @@ export function ClientDetails({
                           field: "nextAnnualAssessment",
                           value: annualDate.getTime(),
                         });
+                        // Recalculate quarterly review dates
+                        const qrDates = getQuarterlyReviewDates(annualDate.getTime());
+                        updateContact({
+                          id: clientId,
+                          field: "nextQuarterlyReview",
+                          value: qrDates[0].date.getTime(),
+                        });
                       }}
                       className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     >
@@ -238,7 +245,33 @@ export function ClientDetails({
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Quarterly Reviews</p>
                     <button
                       onClick={() => {
-                        const qrDates = getQuarterlyReviewDates(client.nextAnnualAssessment);
+                        // First, get the current annual assessment date
+                        const annualDate = new Date(client.nextAnnualAssessment);
+                        // Recalculate all quarterly review dates
+                        const qrDates = getQuarterlyReviewDates(annualDate.getTime());
+                        
+                        // Update each quarter's date to match the calculated date
+                        updateContact({
+                          id: clientId,
+                          field: "qr1Date",
+                          value: qrDates[0].date.getTime(),
+                        });
+                        updateContact({
+                          id: clientId,
+                          field: "qr2Date",
+                          value: qrDates[1].date.getTime(),
+                        });
+                        updateContact({
+                          id: clientId,
+                          field: "qr3Date",
+                          value: qrDates[2].date.getTime(),
+                        });
+                        updateContact({
+                          id: clientId,
+                          field: "qr4Date",
+                          value: qrDates[3].date.getTime(),
+                        });
+                        
                         // Update the next quarterly review date to the first quarter's date
                         updateContact({
                           id: clientId,
@@ -254,23 +287,25 @@ export function ClientDetails({
                   <div className="space-y-2 bg-white dark:bg-gray-800 rounded-md p-3">
                     {getQuarterlyReviewDates(client.nextAnnualAssessment).map((qr, index) => {
                       const qrField = `qr${index + 1}Completed` as "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed";
+                      const qrDateField = `qr${index + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
                       const calculatedDate = qr.date;
-                      const currentDate = new Date(client.nextQuarterlyReview);
+                      const customDate = client[qrDateField];
+                      const displayDate = customDate && customDate !== null ? new Date(customDate) : calculatedDate;
                       
                       return (
                         <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-1">
                           <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-20">{qr.label}:</span>
                           <div className="flex items-center gap-1 flex-1">
                             <select
-                              value={index === 0 ? currentDate.getMonth() + 1 : calculatedDate.getMonth() + 1}
+                              value={displayDate.getMonth() + 1}
                               onChange={(e) => {
                                 const month = parseInt(e.target.value);
-                                const day = index === 0 ? currentDate.getDate() : calculatedDate.getDate();
-                                const year = index === 0 ? currentDate.getFullYear() : calculatedDate.getFullYear();
+                                const day = displayDate.getDate();
+                                const year = displayDate.getFullYear();
                                 const newDate = new Date(year, month - 1, day);
                                 updateContact({
                                   id: clientId,
-                                  field: "nextQuarterlyReview",
+                                  field: qrDateField,
                                   value: newDate.getTime(),
                                 });
                               }}
@@ -290,15 +325,15 @@ export function ClientDetails({
                               <option value="12">Dec</option>
                             </select>
                             <select
-                              value={index === 0 ? currentDate.getDate() : calculatedDate.getDate()}
+                              value={displayDate.getDate()}
                               onChange={(e) => {
-                                const month = index === 0 ? currentDate.getMonth() + 1 : calculatedDate.getMonth() + 1;
+                                const month = displayDate.getMonth() + 1;
                                 const day = parseInt(e.target.value);
-                                const year = index === 0 ? currentDate.getFullYear() : calculatedDate.getFullYear();
+                                const year = displayDate.getFullYear();
                                 const newDate = new Date(year, month - 1, day);
                                 updateContact({
                                   id: clientId,
-                                  field: "nextQuarterlyReview",
+                                  field: qrDateField,
                                   value: newDate.getTime(),
                                 });
                               }}

@@ -21,6 +21,10 @@ const applicationTables = {
     qr2Completed: v.optional(v.boolean()),
     qr3Completed: v.optional(v.boolean()),
     qr4Completed: v.optional(v.boolean()),
+    qr1Date: v.union(v.number(), v.null()),
+    qr2Date: v.union(v.number(), v.null()),
+    qr3Date: v.union(v.number(), v.null()),
+    qr4Date: v.union(v.number(), v.null()),
     archived: v.boolean(),
   })
     .index("by_case_manager", ["caseManagerId"])

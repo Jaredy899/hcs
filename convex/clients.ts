@@ -36,6 +36,10 @@ export const add = mutation({
       firstContactCompleted: false,
       secondContactCompleted: false,
       archived: false,
+      qr1Date: null,
+      qr2Date: null,
+      qr3Date: null,
+      qr4Date: null,
     });
   },
 });
@@ -74,9 +78,13 @@ export const updateContact = mutation({
       v.literal("qr1Completed"),
       v.literal("qr2Completed"),
       v.literal("qr3Completed"),
-      v.literal("qr4Completed")
+      v.literal("qr4Completed"),
+      v.literal("qr1Date"),
+      v.literal("qr2Date"),
+      v.literal("qr3Date"),
+      v.literal("qr4Date")
     ),
-    value: v.union(v.string(), v.number(), v.boolean()),
+    value: v.union(v.string(), v.number(), v.boolean(), v.null()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -87,6 +95,12 @@ export const updateContact = mutation({
       throw new Error("Client not found");
     }
 
-    await ctx.db.patch(args.id, { [args.field]: args.value });
+    if (args.value === undefined) {
+      // Remove the field if value is undefined
+      const { [args.field]: _, ...rest } = client;
+      await ctx.db.patch(args.id, rest);
+    } else {
+      await ctx.db.patch(args.id, { [args.field]: args.value });
+    }
   },
 });
