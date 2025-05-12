@@ -101,7 +101,7 @@ export function ClientDetails({
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6 sticky top-0 bg-white dark:bg-gray-800 pb-4 border-b border-gray-200 dark:border-gray-700">
@@ -123,7 +123,7 @@ export function ClientDetails({
         </div>
 
         <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Contact Information</h3>
               <div className="space-y-4">
@@ -366,9 +366,7 @@ export function ClientDetails({
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Contact Status</h3>
               <div className="space-y-3">
@@ -402,6 +400,88 @@ export function ClientDetails({
                   />
                   <span className="text-gray-700 dark:text-gray-300">Second Contact</span>
                 </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Todo List</h3>
+              <form onSubmit={handleAddTodo} className="mb-4">
+                <input
+                  type="text"
+                  value={newTodo}
+                  onChange={(e) => setNewTodo(e.target.value)}
+                  placeholder="Add new todo"
+                  className="w-full p-2 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+              </form>
+              <ul className="space-y-2">
+                {todos.map((todo) => (
+                  <li key={todo._id} className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 rounded-md">
+                    <input
+                      type="checkbox"
+                      checked={todo.completed}
+                      onChange={() => toggleTodo({ id: todo._id })}
+                      className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-gray-700"
+                    />
+                    <span className={`flex-grow ${todo.completed ? "line-through text-gray-500" : "text-gray-900 dark:text-gray-100"}`}>
+                      {todo.text}
+                    </span>
+                    <button
+                      onClick={() => deleteTodo({ id: todo._id })}
+                      className="text-red-600 hover:text-red-800 text-sm transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Notes</h3>
+              <form onSubmit={handleAddNote} className="mb-4">
+                <textarea
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  placeholder="Add new note"
+                  className="w-full p-2 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  rows={3}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAddNote(e);
+                    }
+                  }}
+                />
+                <button
+                  type="submit"
+                  className="w-full mt-2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                >
+                  Add Note
+                </button>
+              </form>
+              <div className="space-y-3">
+                {notes.map((note) => (
+                  <div key={note._id} className="bg-white dark:bg-gray-800 p-4 rounded-md">
+                    <div className="flex justify-between items-start">
+                      <p className="text-gray-900 dark:text-gray-100">{note.text}</p>
+                      <button
+                        onClick={() => deleteNote({ id: note._id })}
+                        className="text-red-600 hover:text-red-800 text-sm transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                      {new Date(note.createdAt).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -561,82 +641,6 @@ export function ClientDetails({
                     Next face to face due: {new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                   </p>
                 )}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Todo List</h3>
-              <form onSubmit={handleAddTodo} className="mb-4">
-                <input
-                  type="text"
-                  value={newTodo}
-                  onChange={(e) => setNewTodo(e.target.value)}
-                  placeholder="Add new todo"
-                  className="w-full p-2 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                />
-              </form>
-              <ul className="space-y-2">
-                {todos.map((todo) => (
-                  <li key={todo._id} className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 rounded-md">
-                    <input
-                      type="checkbox"
-                      checked={todo.completed}
-                      onChange={() => toggleTodo({ id: todo._id })}
-                      className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-gray-700"
-                    />
-                    <span className={`flex-grow ${todo.completed ? "line-through text-gray-500" : "text-gray-900 dark:text-gray-100"}`}>
-                      {todo.text}
-                    </span>
-                    <button
-                      onClick={() => deleteTodo({ id: todo._id })}
-                      className="text-red-600 hover:text-red-800 text-sm transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Notes</h3>
-              <form onSubmit={handleAddNote} className="mb-4">
-                <textarea
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder="Add new note"
-                  className="w-full p-2 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  rows={3}
-                />
-                <button
-                  type="submit"
-                  className="w-full mt-2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-                >
-                  Add Note
-                </button>
-              </form>
-              <div className="space-y-3">
-                {notes.map((note) => (
-                  <div key={note._id} className="bg-white dark:bg-gray-800 p-4 rounded-md">
-                    <div className="flex justify-between items-start">
-                      <p className="text-gray-900 dark:text-gray-100">{note.text}</p>
-                      <button
-                        onClick={() => deleteNote({ id: note._id })}
-                        className="text-red-600 hover:text-red-800 text-sm transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                      {new Date(note.createdAt).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
