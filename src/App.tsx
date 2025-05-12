@@ -65,6 +65,7 @@ function Content({
   setShowAddClient: (show: boolean) => void;
 }) {
   const loggedInUser = useQuery(api.auth.loggedInUser);
+  const clients = useQuery(api.clients.list) || [];
 
   if (loggedInUser === undefined) {
     return (
@@ -91,7 +92,7 @@ function Content({
             <div className="mb-4">
               <h2 className="text-xl sm:text-2xl font-bold">Consumers</h2>
               <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                Total: {useQuery(api.clients.list)?.length || 0} active consumers
+                Total: {clients.length} active consumers
               </div>
             </div>
             <ClientList
