@@ -22,7 +22,14 @@ function getUpcomingDates(client: any) {
   if (client.qr3Completed) nextQRIndex = 3;
   if (client.qr4Completed) nextQRIndex = 0; // Reset to Q1 if all are completed
   
-  const nextQRDate = qrDates[nextQRIndex];
+  // Use custom date if it exists, otherwise use calculated date
+  let nextQRDate;
+  const customDate = client[`qr${nextQRIndex + 1}Date`];
+  if (customDate && customDate !== null) {
+    nextQRDate = new Date(customDate);
+  } else {
+    nextQRDate = qrDates[nextQRIndex];
+  }
 
   // Only show red if the QR is due in the current month
   const isQRDue = nextQRDate && nextQRDate.getMonth() + 1 === currentMonth;
