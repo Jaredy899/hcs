@@ -90,6 +90,9 @@ function Content({
           <div className="col-span-1">
             <div className="mb-4">
               <h2 className="text-xl sm:text-2xl font-bold">Consumers</h2>
+              <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                Total: {useQuery(api.clients.list)?.length || 0} active consumers
+              </div>
             </div>
             <ClientList
               selectedClientId={selectedClientId}
