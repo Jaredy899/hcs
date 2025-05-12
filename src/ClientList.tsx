@@ -227,7 +227,7 @@ export function ClientList({
                           })
                         : "Not set"}
                     </td>
-                    <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs font-bold text-gray-900 dark:text-gray-100">
                       {upcomingDates.nextQRDate ? (
                         <div className="flex items-center justify-center gap-1">
                           <span className={upcomingDates.isQRDue ? "text-red-600 font-medium" : ""}>
@@ -244,22 +244,33 @@ export function ClientList({
                         "Not set"
                       )}
                     </td>
-                    <td className="px-3 py-2 text-center text-xs font-bold text-gray-900 dark:text-gray-100">
+                    <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
                       {client.lastContactDate
                         ? new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                         : "No contact recorded"}
                     </td>
-                    <td className="px-3 py-2 text-center text-xs font-bold text-gray-900 dark:text-gray-100">
+                    <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
                       {client.lastFaceToFaceDate
                         ? new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                         : "No face to face recorded"}
                     </td>
-                    <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-2 text-center text-xs font-bold text-gray-900 dark:text-gray-100">
                       {client.lastFaceToFaceDate
-                        ? new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                          })
+                        ? (() => {
+                            const nextFaceToFaceDate = new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000));
+                            const today = new Date();
+                            const daysUntilNext = Math.ceil((nextFaceToFaceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                            const isDueSoon = daysUntilNext <= 15;
+                            
+                            return (
+                              <span className={isDueSoon ? "text-red-600" : ""}>
+                                {nextFaceToFaceDate.toLocaleDateString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </span>
+                            );
+                          })()
                         : "Not applicable"}
                     </td>
                   </tr>
