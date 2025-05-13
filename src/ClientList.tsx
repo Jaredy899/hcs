@@ -11,6 +11,7 @@ function getUpcomingDates(client: any) {
   const annualDate = new Date(client.nextAnnualAssessment);
   const annualMonth = annualDate.getMonth() + 1;
   const isAnnualDue = annualMonth === currentMonth && !client.lastAnnualCompleted;
+  const isAnnualDueNextMonth = annualMonth === currentMonth + 1 && !client.lastAnnualCompleted;
 
   // Get quarterly review dates
   const qrDates = getQuarterlyReviewDates(client.nextAnnualAssessment);
@@ -42,6 +43,7 @@ function getUpcomingDates(client: any) {
 
   return {
     isAnnualDue,
+    isAnnualDueNextMonth,
     isQRDue,
     isQ4,
     annualDate: annualDate,
@@ -229,11 +231,15 @@ export function ClientList({
                     </td>
                     <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
                       {client.nextAnnualAssessment
-                        ? new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                            year: undefined
-                          })
+                        ? (
+                          <span className={upcomingDates.isAnnualDueNextMonth ? "text-red-600 font-medium" : ""}>
+                            {new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: undefined
+                            })}
+                          </span>
+                        )
                         : "Not set"}
                     </td>
                     <td className="px-3 py-2 text-center text-xs font-bold text-gray-900 dark:text-gray-100">
