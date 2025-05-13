@@ -310,7 +310,13 @@ export function ClientList({
               >
                 <div>
                   <h3 className="text-base font-medium text-gray-900 dark:text-gray-100">{client.name}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{client.phoneNumber}</p>
+                  <a 
+                    href={`tel:${client.phoneNumber}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    {client.phoneNumber}
+                  </a>
                 </div>
               </div>
             );
