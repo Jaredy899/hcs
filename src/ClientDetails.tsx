@@ -509,6 +509,7 @@ export function ClientDetails({
                   <div className="flex gap-2">
                     <select
                       id="lastContactMonth"
+                      defaultValue={client.lastContactDate ? new Date(client.lastContactDate).getMonth() + 1 : new Date().getMonth() + 1}
                       onChange={(e) => {
                         const month = parseInt(e.target.value);
                         const day = parseInt((document.getElementById('lastContactDay') as HTMLSelectElement)?.value || '1');
@@ -536,6 +537,7 @@ export function ClientDetails({
                     </select>
                     <select
                       id="lastContactDay"
+                      defaultValue={client.lastContactDate ? new Date(client.lastContactDate).getDate() : new Date().getDate()}
                       onChange={(e) => {
                         const month = parseInt((document.getElementById('lastContactMonth') as HTMLSelectElement)?.value || '1');
                         const day = parseInt(e.target.value);
