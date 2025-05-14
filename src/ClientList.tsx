@@ -90,6 +90,10 @@ export function ClientList({
   const updateClient = useMutation(api.clients.updateContact);
   const [sortBy, setSortBy] = useState<'first' | 'last'>('last');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // New sort state
+  const [sortColumn, setSortColumn] = useState<string>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Clear search when client is deselected
   useEffect(() => {
@@ -98,18 +102,73 @@ export function ClientList({
     }
   }, [selectedClientId]);
 
-  // Sort clients based on selected option
-  const sortedClients = [...clients].sort((a, b) => {
-    const aName = a.name.split(' ');
-    const bName = b.name.split(' ');
-    
-    if (sortBy === 'first') {
-      return aName[0].localeCompare(bName[0]);
+  const handleColumnSort = (column: string) => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      const aLast = aName[aName.length - 1];
-      const bLast = bName[bName.length - 1];
-      return aLast.localeCompare(bLast);
+      // New column, default to ascending
+      setSortColumn(column);
+      setSortDirection('asc');
     }
+  };
+
+  // Sort clients based on selected column and direction
+  const sortedClients = [...clients].sort((a, b) => {
+    let comparison = 0;
+    
+    switch (sortColumn) {
+      case 'name':
+        const aName = a.name.split(' ');
+        const bName = b.name.split(' ');
+        
+        if (sortBy === 'first') {
+          comparison = aName[0].localeCompare(bName[0]);
+        } else {
+          const aLast = aName[aName.length - 1];
+          const bLast = bName[bName.length - 1];
+          comparison = aLast.localeCompare(bLast);
+        }
+        break;
+        
+      case 'annualAssessment':
+        const aAnnual = a.nextAnnualAssessment || 0;
+        const bAnnual = b.nextAnnualAssessment || 0;
+        comparison = aAnnual - bAnnual;
+        break;
+        
+      case 'nextQR':
+        const aUpcoming = getUpcomingDates(a);
+        const bUpcoming = getUpcomingDates(b);
+        const aQRDate = aUpcoming.nextQRDate ? aUpcoming.nextQRDate.getTime() : 0;
+        const bQRDate = bUpcoming.nextQRDate ? bUpcoming.nextQRDate.getTime() : 0;
+        comparison = aQRDate - bQRDate;
+        break;
+        
+      case 'lastContact':
+        const aContact = a.lastContactDate || 0;
+        const bContact = b.lastContactDate || 0;
+        comparison = aContact - bContact;
+        break;
+        
+      case 'lastF2F':
+        const aF2F = a.lastFaceToFaceDate || 0;
+        const bF2F = b.lastFaceToFaceDate || 0;
+        comparison = aF2F - bF2F;
+        break;
+        
+      case 'nextF2F':
+        const aNextF2F = a.lastFaceToFaceDate ? (a.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)) : 0;
+        const bNextF2F = b.lastFaceToFaceDate ? (b.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)) : 0;
+        comparison = aNextF2F - bNextF2F;
+        break;
+        
+      default:
+        comparison = 0;
+    }
+    
+    // Apply sort direction
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
 
   // Filter clients based on search term
@@ -135,6 +194,14 @@ export function ClientList({
       field: type === 'qr' ? 'lastQRCompleted' : 'lastAnnualCompleted',
       value: today,
     });
+  };
+  
+  // Helper function to render sort indicators
+  const renderSortIndicator = (column: string) => {
+    if (sortColumn === column) {
+      return sortDirection === 'asc' ? ' ▲' : ' ▼';
+    }
+    return '';
   };
 
   return (
@@ -173,23 +240,41 @@ export function ClientList({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Consumer
+                <th 
+                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => handleColumnSort('name')}
+                >
+                  Consumer{renderSortIndicator('name')}
                 </th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Annual Assessment
+                <th 
+                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => handleColumnSort('annualAssessment')}
+                >
+                  Annual Assessment{renderSortIndicator('annualAssessment')}
                 </th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Next QR
+                <th 
+                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => handleColumnSort('nextQR')}
+                >
+                  Next QR{renderSortIndicator('nextQR')}
                 </th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Last Contact
+                <th 
+                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => handleColumnSort('lastContact')}
+                >
+                  Last Contact{renderSortIndicator('lastContact')}
                 </th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Last Face to Face
+                <th 
+                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => handleColumnSort('lastF2F')}
+                >
+                  Last Face to Face{renderSortIndicator('lastF2F')}
                 </th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Next Face to Face
+                <th 
+                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => handleColumnSort('nextF2F')}
+                >
+                  Next Face to Face{renderSortIndicator('nextF2F')}
                 </th>
               </tr>
             </thead>
