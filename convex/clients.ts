@@ -104,3 +104,57 @@ export const updateContact = mutation({
     }
   },
 });
+
+export const bulkImport = mutation({
+  args: {
+    clients: v.array(v.object({
+      firstName: v.string(),
+      lastName: v.string(),
+      preferredName: v.optional(v.string()),
+      clientId: v.string(),
+      phoneNumber: v.string(),
+      insurance: v.string(),
+      annualAssessmentDate: v.string(), // MM/DD/YYYY format
+    })),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const results = [];
+    for (const client of args.clients) {
+      // Parse the annual assessment date from MM/DD/YYYY format
+      const [month, day, year] = client.annualAssessmentDate.split('/').map(Number);
+      console.log('Parsed date:', { month, day, year, original: client.annualAssessmentDate });
+      
+      // Set the date to the first of the month at noon UTC to avoid timezone issues
+      // Note: JavaScript months are 0-based, so we subtract 1 from the month
+      const annualAssessmentDate = new Date(Date.UTC(year, month - 1, 1, 12, 0, 0)).getTime();
+      console.log('Created date:', new Date(annualAssessmentDate).toLocaleDateString());
+      
+      // Create the client record
+      const clientId = await ctx.db.insert("clients", {
+        name: client.preferredName 
+          ? `${client.firstName} (${client.preferredName}) ${client.lastName}`
+          : `${client.firstName} ${client.lastName}`,
+        caseManagerId: userId,
+        phoneNumber: client.phoneNumber,
+        insurance: client.insurance,
+        clientId: client.clientId,
+        firstContactCompleted: false,
+        secondContactCompleted: false,
+        archived: false,
+        nextQuarterlyReview: Date.now(),
+        nextAnnualAssessment: annualAssessmentDate,
+        qr1Date: null,
+        qr2Date: null,
+        qr3Date: null,
+        qr4Date: null,
+      });
+      
+      results.push(clientId);
+    }
+    
+    return results;
+  },
+});

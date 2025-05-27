@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { toast } from "sonner";
+import { ImportClientsForm } from "./ImportClientsForm";
 
 function getQuarterlyReviewDates(annualAssessmentDate: number) {
   const date = new Date(annualAssessmentDate);
@@ -34,6 +35,7 @@ function getQuarterlyReviewDates(annualAssessmentDate: number) {
 
 export function AddClientForm({ onClose }: { onClose: () => void }) {
   const addClient = useMutation(api.clients.add);
+  const [showImportForm, setShowImportForm] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phoneNumber: "",
@@ -62,7 +64,12 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
       insurance: "",
       clientId: ""
     });
+    onClose();
   };
+
+  if (showImportForm) {
+    return <ImportClientsForm onClose={() => setShowImportForm(false)} />;
+  }
 
   return (
     <div 
@@ -76,15 +83,23 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Add New Consumer</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-            >
-              <span className="sr-only">Close</span>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowImportForm(true)}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Import CSV
+              </button>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+              >
+                <span className="sr-only">Close</span>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
