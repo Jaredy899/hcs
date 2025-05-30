@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
-import { useState, KeyboardEvent, useEffect } from "react";
+import { useState, KeyboardEvent, useEffect, useRef } from "react";
 
 function getUpcomingDates(client: any) {
   const today = new Date();
@@ -95,10 +95,14 @@ export function ClientList({
   const [sortColumn, setSortColumn] = useState<string>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   // Clear search when client is deselected
   useEffect(() => {
     if (!selectedClientId) {
       setSearchTerm('');
+      // Focus the search input when modal closes
+      searchInputRef.current?.focus();
     }
   }, [selectedClientId]);
 
@@ -214,6 +218,7 @@ export function ClientList({
           <input
             type="text"
             id="search"
+            ref={searchInputRef}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
