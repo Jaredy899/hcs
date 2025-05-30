@@ -219,6 +219,7 @@ export function ClientList({
             onKeyDown={handleKeyDown}
             placeholder="Search by name... (Press Enter when one result, Esc to clear)"
             className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            autoFocus
           />
         </div>
         <div>
