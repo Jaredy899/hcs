@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { Id } from "../convex/_generated/dataModel";
 
@@ -70,6 +70,30 @@ export function ClientDetails({
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
+
+  // Add local state for quarterly review dates (month and day for each quarter)
+  const [qrDates, setQrDates] = useState(() =>
+    [0, 1, 2, 3].map((i) => {
+      const qrField = `qr${i + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
+      const date = client?.[qrField]
+        ? new Date(client[qrField])
+        : getQuarterlyReviewDates(client?.nextAnnualAssessment || Date.now())[i].date;
+      return { month: date.getMonth() + 1, day: date.getDate() };
+    })
+  );
+
+  // Sync local state with client changes
+  useEffect(() => {
+    setQrDates(
+      [0, 1, 2, 3].map((i) => {
+        const qrField = `qr${i + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
+        const date = client?.[qrField]
+          ? new Date(client[qrField])
+          : getQuarterlyReviewDates(client?.nextAnnualAssessment || Date.now())[i].date;
+        return { month: date.getMonth() + 1, day: date.getDate() };
+      })
+    );
+  }, [client]);
 
   if (!client) return null;
 
@@ -288,21 +312,25 @@ export function ClientDetails({
                     {getQuarterlyReviewDates(client.nextAnnualAssessment).map((qr, index) => {
                       const qrField = `qr${index + 1}Completed` as "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed";
                       const qrDateField = `qr${index + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
-                      const calculatedDate = qr.date;
-                      const customDate = client[qrDateField];
-                      const displayDate = customDate && customDate !== null ? new Date(customDate) : calculatedDate;
-                      
+                      const { month, day } = qrDates[index];
+                      const year = (client[qrDateField]
+                        ? new Date(client[qrDateField])
+                        : qr.date
+                      ).getFullYear();
+
                       return (
                         <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-1">
                           <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-20">{qr.label}:</span>
                           <div className="flex items-center gap-1 flex-1">
                             <select
-                              value={displayDate.getMonth() + 1}
+                              value={month}
                               onChange={(e) => {
-                                const month = parseInt(e.target.value);
-                                const day = displayDate.getDate();
-                                const year = displayDate.getFullYear();
-                                const newDate = new Date(year, month - 1, day);
+                                const newMonth = parseInt(e.target.value);
+                                setQrDates((prev) =>
+                                  prev.map((d, i) => i === index ? { ...d, month: newMonth } : d)
+                                );
+                                // Use the current day from local state
+                                const newDate = new Date(year, newMonth - 1, day);
                                 updateContact({
                                   id: clientId,
                                   field: qrDateField,
@@ -325,12 +353,14 @@ export function ClientDetails({
                               <option value="12">Dec</option>
                             </select>
                             <select
-                              value={displayDate.getDate()}
+                              value={day}
                               onChange={(e) => {
-                                const month = displayDate.getMonth() + 1;
-                                const day = parseInt(e.target.value);
-                                const year = displayDate.getFullYear();
-                                const newDate = new Date(year, month - 1, day);
+                                const newDay = parseInt(e.target.value);
+                                setQrDates((prev) =>
+                                  prev.map((d, i) => i === index ? { ...d, day: newDay } : d)
+                                );
+                                // Use the current month from local state
+                                const newDate = new Date(year, month - 1, newDay);
                                 updateContact({
                                   id: clientId,
                                   field: qrDateField,
@@ -339,8 +369,8 @@ export function ClientDetails({
                               }}
                               className="text-sm rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 w-16 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             >
-                              {Array.from({length: 31}, (_, i) => i + 1).map(day => (
-                                <option key={day} value={day}>{day}</option>
+                              {Array.from({length: 31}, (_, i) => i + 1).map(dayOption => (
+                                <option key={dayOption} value={dayOption}>{dayOption}</option>
                               ))}
                             </select>
                             <label className="flex items-center gap-1 ml-1">
