@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as auth from "../auth.js";
 import type * as clients from "../clients.js";
+import type * as crons from "../crons.js";
 import type * as http from "../http.js";
 import type * as notes from "../notes.js";
 import type * as router from "../router.js";
@@ -31,6 +32,7 @@ import type * as todos from "../todos.js";
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   clients: typeof clients;
+  crons: typeof crons;
   http: typeof http;
   notes: typeof notes;
   router: typeof router;

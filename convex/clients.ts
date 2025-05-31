@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const list = query({
@@ -156,5 +156,20 @@ export const bulkImport = mutation({
     }
     
     return results;
+  },
+});
+
+export const resetMonthlyContacts = internalMutation({
+  args: {},
+  handler: async (ctx, args) => {
+    const clients = await ctx.db.query("clients").collect();
+    for (const client of clients) {
+      if (!client.archived) {
+        await ctx.db.patch(client._id, {
+          firstContactCompleted: false,
+          secondContactCompleted: false,
+        });
+      }
+    }
   },
 });
