@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Id } from "../convex/_generated/dataModel";
 
@@ -53,6 +53,16 @@ export function ClientDetails({
 
   const [newTodo, setNewTodo] = useState("");
   const [newNote, setNewNote] = useState("");
+  
+  // Contact information editing state
+  const [isEditingContact, setIsEditingContact] = useState(false);
+  const [editedContact, setEditedContact] = useState({
+    name: "",
+    phoneNumber: "",
+    insurance: "",
+    clientId: ""
+  });
+
   const [annualMonth, setAnnualMonth] = useState(() => {
     if (client?.nextAnnualAssessment) {
       return new Date(client.nextAnnualAssessment).getMonth() + 1;
@@ -84,26 +94,48 @@ export function ClientDetails({
 
   // Sync local state with client changes
   useEffect(() => {
-    setQrDates(
-      [0, 1, 2, 3].map((i) => {
-        const qrField = `qr${i + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
-        const date = client?.[qrField]
-          ? new Date(client[qrField])
-          : getQuarterlyReviewDates(client?.nextAnnualAssessment || Date.now())[i].date;
-        return { month: date.getMonth() + 1, day: date.getDate() };
-      })
-    );
+    if (client) {
+      setEditedContact({
+        name: client.name || "",
+        phoneNumber: client.phoneNumber || "",
+        insurance: client.insurance || "",
+        clientId: client.clientId || ""
+      });
+      
+      setQrDates(
+        [0, 1, 2, 3].map((i) => {
+          const qrField = `qr${i + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
+          const date = client?.[qrField]
+            ? new Date(client[qrField])
+            : getQuarterlyReviewDates(client?.nextAnnualAssessment || Date.now())[i].date;
+          return { month: date.getMonth() + 1, day: date.getDate() };
+        })
+      );
+    }
   }, [client]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        if (isEditingContact) {
+          // Cancel editing
+          setIsEditingContact(false);
+          if (client) {
+            setEditedContact({
+              name: client.name || "",
+              phoneNumber: client.phoneNumber || "",
+              insurance: client.insurance || "",
+              clientId: client.clientId || ""
+            });
+          }
+        } else {
+          onClose();
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, isEditingContact, client]);
 
   if (!client) return null;
 
@@ -126,6 +158,54 @@ export function ClientDetails({
       await archiveClient({ id: clientId });
       toast.success("Consumer archived");
       onClose();
+    }
+  };
+
+  const handleSaveContact = async () => {
+    try {
+      await Promise.all([
+        updateContact({ id: clientId, field: "name", value: editedContact.name }),
+        updateContact({ id: clientId, field: "phoneNumber", value: editedContact.phoneNumber }),
+        updateContact({ id: clientId, field: "insurance", value: editedContact.insurance }),
+        updateContact({ id: clientId, field: "clientId", value: editedContact.clientId })
+      ]);
+      setIsEditingContact(false);
+      toast.success("Contact information updated");
+    } catch (error) {
+      toast.error("Failed to update contact information");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingContact(false);
+    if (client) {
+      setEditedContact({
+        name: client.name || "",
+        phoneNumber: client.phoneNumber || "",
+        insurance: client.insurance || "",
+        clientId: client.clientId || ""
+      });
+    }
+  };
+
+  const handleQuarterlyReviewToggle = async (index: number, checked: boolean) => {
+    const qrField = `qr${index + 1}Completed` as "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed";
+    
+    // If this is Q4 being completed, reset all quarterly reviews
+    if (index === 3 && checked) {
+      await Promise.all([
+        updateContact({ id: clientId, field: "qr1Completed", value: false }),
+        updateContact({ id: clientId, field: "qr2Completed", value: false }),
+        updateContact({ id: clientId, field: "qr3Completed", value: false }),
+        updateContact({ id: clientId, field: "qr4Completed", value: false })
+      ]);
+      toast.success("All quarterly reviews reset for new cycle");
+    } else {
+      await updateContact({
+        id: clientId,
+        field: qrField,
+        value: checked,
+      });
     }
   };
 
@@ -161,58 +241,103 @@ export function ClientDetails({
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Contact Information</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">Contact Information</h3>
+                  {!isEditingContact ? (
+                    <button
+                      onClick={() => setIsEditingContact(true)}
+                      className="text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 transition-colors"
+                    >
+                      Edit
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveContact}
+                        className="text-sm bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="text-sm bg-gray-600 text-white px-3 py-1.5 rounded-md hover:bg-gray-700 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
                     <input
                       type="text"
-                      value={client.name}
-                      onChange={(e) => updateContact({
-                        id: clientId,
-                        field: "name",
-                        value: e.target.value,
-                      })}
-                      className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      value={isEditingContact ? editedContact.name : client.name}
+                      onChange={(e) => {
+                        if (isEditingContact) {
+                          setEditedContact({ ...editedContact, name: e.target.value });
+                        }
+                      }}
+                      readOnly={!isEditingContact}
+                      className={`block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 dark:text-gray-100 ${
+                        isEditingContact 
+                          ? "bg-white dark:bg-gray-700" 
+                          : "bg-gray-100 dark:bg-gray-800 cursor-default"
+                      }`}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
                     <input
                       type="tel"
-                      value={client.phoneNumber}
-                      onChange={(e) => updateContact({
-                        id: clientId,
-                        field: "phoneNumber",
-                        value: e.target.value,
-                      })}
-                      className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      value={isEditingContact ? editedContact.phoneNumber : client.phoneNumber}
+                      onChange={(e) => {
+                        if (isEditingContact) {
+                          setEditedContact({ ...editedContact, phoneNumber: e.target.value });
+                        }
+                      }}
+                      readOnly={!isEditingContact}
+                      className={`block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 dark:text-gray-100 ${
+                        isEditingContact 
+                          ? "bg-white dark:bg-gray-700" 
+                          : "bg-gray-100 dark:bg-gray-800 cursor-default"
+                      }`}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Insurance</label>
                     <input
                       type="text"
-                      value={client.insurance}
-                      onChange={(e) => updateContact({
-                        id: clientId,
-                        field: "insurance",
-                        value: e.target.value,
-                      })}
-                      className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      value={isEditingContact ? editedContact.insurance : client.insurance}
+                      onChange={(e) => {
+                        if (isEditingContact) {
+                          setEditedContact({ ...editedContact, insurance: e.target.value });
+                        }
+                      }}
+                      readOnly={!isEditingContact}
+                      className={`block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 dark:text-gray-100 ${
+                        isEditingContact 
+                          ? "bg-white dark:bg-gray-700" 
+                          : "bg-gray-100 dark:bg-gray-800 cursor-default"
+                      }`}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Consumer ID</label>
                     <input
                       type="text"
-                      value={client.clientId}
-                      onChange={(e) => updateContact({
-                        id: clientId,
-                        field: "clientId",
-                        value: e.target.value,
-                      })}
-                      className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      value={isEditingContact ? editedContact.clientId : client.clientId}
+                      onChange={(e) => {
+                        if (isEditingContact) {
+                          setEditedContact({ ...editedContact, clientId: e.target.value });
+                        }
+                      }}
+                      readOnly={!isEditingContact}
+                      className={`block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 dark:text-gray-100 ${
+                        isEditingContact 
+                          ? "bg-white dark:bg-gray-700" 
+                          : "bg-gray-100 dark:bg-gray-800 cursor-default"
+                      }`}
                     />
                   </div>
                 </div>
@@ -389,13 +514,7 @@ export function ClientDetails({
                                 <input
                                   type="checkbox"
                                   checked={client[qrField] || false}
-                                  onChange={(e) => {
-                                    updateContact({
-                                      id: clientId,
-                                      field: qrField,
-                                      value: e.target.checked,
-                                    });
-                                  }}
+                                  onChange={(e) => handleQuarterlyReviewToggle(index, e.target.checked)}
                                   className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700"
                                 />
                                 <span className="text-sm text-gray-700 dark:text-gray-300">Done</span>
