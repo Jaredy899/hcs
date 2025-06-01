@@ -5,7 +5,6 @@ import { authTables } from "@convex-dev/auth/server";
 const applicationTables = {
   clients: defineTable({
     name: v.string(),
-    caseManagerId: v.id("users"),
     phoneNumber: v.string(),
     insurance: v.string(),
     clientId: v.optional(v.string()),
@@ -25,10 +24,19 @@ const applicationTables = {
     qr2Date: v.optional(v.union(v.number(), v.null())),
     qr3Date: v.optional(v.union(v.number(), v.null())),
     qr4Date: v.optional(v.union(v.number(), v.null())),
+  })
+    .index("by_client_id", ["clientId"]),
+
+  caseManagerClients: defineTable({
+    caseManagerId: v.id("users"),
+    clientId: v.id("clients"),
     archived: v.boolean(),
+    assignedDate: v.number(),
   })
     .index("by_case_manager", ["caseManagerId"])
-    .index("by_case_manager_and_archived", ["caseManagerId", "archived"]),
+    .index("by_case_manager_and_archived", ["caseManagerId", "archived"])
+    .index("by_client", ["clientId"])
+    .index("by_case_manager_client", ["caseManagerId", "clientId"]),
 
   todos: defineTable({
     clientId: v.id("clients"),
