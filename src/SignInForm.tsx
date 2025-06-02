@@ -129,13 +129,13 @@ export function SignInForm() {
         </div>
         {flow === "signIn" && (
           <div className="text-center text-sm text-slate-600">
-            <button
+            {/* <button
               type="button"
               className="text-blue-500 cursor-pointer"
               onClick={() => setFlow("forgotPassword")}
             >
               Forgot your password?
-            </button>
+            </button> */}
           </div>
         )}
       </form>
