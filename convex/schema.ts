@@ -1,8 +1,20 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
-const applicationTables = {
+export default defineSchema({
+  users: defineTable({
+    clerkId: v.optional(v.string()),
+    email: v.string(),
+    name: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    image: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+  })
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_email", ["email"]),
+
   clients: defineTable({
     name: v.string(),
     phoneNumber: v.string(),
@@ -54,19 +66,4 @@ const applicationTables = {
     text: v.string(),
     createdAt: v.number(),
   }).index("by_client", ["clientId"]),
-
-  passwordResetTokens: defineTable({
-    email: v.string(),
-    token: v.string(),
-    expiresAt: v.number(),
-    used: v.boolean(),
-  })
-    .index("by_email", ["email"])
-    .index("by_token", ["token"])
-    .index("by_expiration", ["expiresAt"]),
-};
-
-export default defineSchema({
-  ...authTables,
-  ...applicationTables,
 });

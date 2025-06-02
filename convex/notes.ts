@@ -1,11 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getCurrentUserId, getCurrentUserIdQuery } from "./auth";
 
 export const list = query({
   args: { clientId: v.id("clients") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserIdQuery(ctx);
     if (!userId) return [];
 
     return await ctx.db
@@ -16,18 +16,16 @@ export const list = query({
   },
 });
 
-export const add = mutation({
-  args: {
-    clientId: v.id("clients"),
-    text: v.string(),
-  },
+export const create = mutation({
+  args: { clientId: v.id("clients"), text: v.string() },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     return await ctx.db.insert("notes", {
-      ...args,
+      clientId: args.clientId,
       caseManagerId: userId,
+      text: args.text,
       createdAt: Date.now(),
     });
   },
@@ -36,12 +34,16 @@ export const add = mutation({
 export const remove = mutation({
   args: { id: v.id("notes") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
+    // Get the note to verify ownership
     const note = await ctx.db.get(args.id);
-    if (!note || note.caseManagerId !== userId) {
-      throw new Error("Note not found");
+    if (!note) throw new Error("Note not found");
+    
+    // Only the case manager who created the note can delete it
+    if (note.caseManagerId !== userId) {
+      throw new Error("Not authorized to delete this note");
     }
 
     await ctx.db.delete(args.id);

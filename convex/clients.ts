@@ -1,11 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getCurrentUserId, getCurrentUserIdQuery } from "./auth";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserIdQuery(ctx);
     if (!userId) return [];
     
     // Get all client assignments for this case manager that are not archived
@@ -35,7 +35,7 @@ export const list = query({
 export const getByClientId = query({
   args: { clientId: v.string() },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserIdQuery(ctx);
     if (!userId) throw new Error("Not authenticated");
     
     return await ctx.db
@@ -48,7 +48,7 @@ export const getByClientId = query({
 export const getClientCaseManagers = query({
   args: { clientId: v.id("clients") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserIdQuery(ctx);
     if (!userId) throw new Error("Not authenticated");
     
     // Get all case manager assignments for this client (including archived ones)
@@ -75,7 +75,7 @@ export const add = mutation({
     nextAnnualAssessment: v.number(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // Check if a client with this clientId already exists
@@ -135,7 +135,7 @@ export const add = mutation({
 export const archive = mutation({
   args: { id: v.id("clients") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // Find the assignment between this case manager and client
@@ -183,7 +183,7 @@ export const updateContact = mutation({
     value: v.union(v.string(), v.number(), v.boolean(), v.null()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // Check if this case manager has access to this client
@@ -219,7 +219,7 @@ export const assignClient = mutation({
     newCaseManagerId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // Find the client by clientId
@@ -272,7 +272,7 @@ export const bulkImport = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // Define case management programs and their priority (higher number = higher priority)
@@ -436,7 +436,7 @@ export const bulkImportSimple = mutation({
     )),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getCurrentUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     const strategy = args.deduplicationStrategy || "first";
