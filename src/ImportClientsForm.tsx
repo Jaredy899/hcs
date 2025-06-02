@@ -3,7 +3,7 @@ import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 
 export function ImportClientsForm({ onClose }: { onClose: () => void }) {
-  const bulkImport = useMutation(api.clients.bulkImport);
+  const bulkImport = useMutation(api.clients.bulkImportSimple);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -41,7 +41,10 @@ export function ImportClientsForm({ onClose }: { onClose: () => void }) {
         };
       });
 
-      await bulkImport({ clients });
+      await bulkImport({ 
+        clients,
+        deduplicationStrategy: "first" // Keep first occurrence of duplicate clients
+      });
       setSuccess(`Successfully imported ${clients.length} clients`);
       setError(null);
     } catch (err) {
@@ -108,7 +111,7 @@ export function ImportClientsForm({ onClose }: { onClose: () => void }) {
                   <p className="pl-1">or drag and drop</p>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  CSV file with columns: Id, First Name, Last Name, Preferred Name, Client/Record ID, Cell Phone, Plan End Date, Authorization ID
+                  CSV file with columns: Id, First Name, Last Name, Preferred Name, Client/Record ID, Cell Phone, Plan End Date, Insurance/Authorization ID
                 </p>
               </div>
             </div>
