@@ -54,6 +54,16 @@ const applicationTables = {
     text: v.string(),
     createdAt: v.number(),
   }).index("by_client", ["clientId"]),
+
+  passwordResetTokens: defineTable({
+    email: v.string(),
+    token: v.string(),
+    expiresAt: v.number(),
+    used: v.boolean(),
+  })
+    .index("by_email", ["email"])
+    .index("by_token", ["token"])
+    .index("by_expiration", ["expiresAt"]),
 };
 
 export default defineSchema({

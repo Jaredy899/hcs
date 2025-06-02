@@ -2,12 +2,60 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useMutation } from "convex/react";
+import { api } from "../convex/_generated/api";
 
 export function SignInForm() {
   const { signIn } = useAuthActions();
-  const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
+  const [flow, setFlow] = useState<"signIn" | "signUp" | "forgotPassword">("signIn");
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const requestPasswordReset = useMutation(api.auth.requestPasswordReset);
+
+  const handleForgotPassword = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get("email") as string;
+    
+    try {
+      await requestPasswordReset({ email });
+      toast.success("Password reset email sent! Check your console for the reset link.");
+      setFlow("signIn");
+    } catch (error) {
+      toast.error("Failed to send password reset email");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (flow === "forgotPassword") {
+    return (
+      <div className="w-full">
+        <form className="flex flex-col gap-4" onSubmit={handleForgotPassword}>
+          <input
+            className="input-field"
+            type="email"
+            name="email"
+            placeholder="Email"
+            required
+          />
+          <button className="auth-button" type="submit" disabled={submitting}>
+            Send Reset Link
+          </button>
+          <div className="text-center text-sm text-slate-600">
+            <button
+              type="button"
+              className="text-blue-500 cursor-pointer"
+              onClick={() => setFlow("signIn")}
+            >
+              Back to Sign In
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -79,6 +127,17 @@ export function SignInForm() {
             {flow === "signIn" ? "Sign up instead" : "Sign in instead"}
           </button>
         </div>
+        {flow === "signIn" && (
+          <div className="text-center text-sm text-slate-600">
+            <button
+              type="button"
+              className="text-blue-500 cursor-pointer"
+              onClick={() => setFlow("forgotPassword")}
+            >
+              Forgot your password?
+            </button>
+          </div>
+        )}
       </form>
       <div className="flex items-center justify-center my-3">
         <hr className="my-4 grow" />

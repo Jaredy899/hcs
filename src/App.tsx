@@ -4,15 +4,59 @@ import { SignInForm } from "./SignInForm";
 import { SignOutButton } from "./SignOutButton";
 import { Toaster } from "sonner";
 import { ClientList } from "./ClientList";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ClientDetails } from "./ClientDetails";
 import { AddClientForm } from "./AddClientForm";
 import { Id } from "../convex/_generated/dataModel";
 import { ThemeSwitcher } from "./ThemeSwitcher";
+import { ResetPasswordForm } from "./ResetPasswordForm";
 
 export default function App() {
   const [selectedClientId, setSelectedClientId] = useState<Id<"clients"> | null>(null);
   const [showAddClient, setShowAddClient] = useState(false);
+  const [resetToken, setResetToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check for reset token in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (token) {
+      setResetToken(token);
+    }
+  }, []);
+
+  const handleResetSuccess = () => {
+    setResetToken(null);
+    // Clear the token from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('token');
+    window.history.replaceState({}, '', url.toString());
+  };
+
+  // If there's a reset token, show the reset password form
+  if (resetToken) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark transition-colors">
+        <header className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-2">
+            <img 
+              src="https://highlandscsb.org/wp-content/uploads/2012/10/favicon.png" 
+              alt="HCS Logo" 
+              className="w-6 h-6"
+            />
+            <h2 className="text-lg sm:text-xl font-semibold">HCS Case Management System</h2>
+          </div>
+          <ThemeSwitcher />
+        </header>
+        
+        <main className="flex-1 flex items-center justify-center p-4">
+          <ResetPasswordForm token={resetToken} onSuccess={handleResetSuccess} />
+        </main>
+        
+        <Toaster />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark transition-colors">
