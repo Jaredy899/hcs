@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { CheckSquare, ClipboardList } from "lucide-react";
 
 function getUpcomingDates(client: any) {
   const today = new Date();
@@ -92,6 +93,7 @@ export function ClientList({
   onCloseClient: () => void;
 }) {
   const clients = useQuery(api.clients.list) || [];
+  const todoCounts = useQuery(api.todos.getClientTodoCounts) || {};
   const updateClient = useMutation(api.clients.updateContact);
   const [sortBy, setSortBy] = useState<'first' | 'last'>('last');
   const [searchTerm, setSearchTerm] = useState('');
@@ -304,7 +306,14 @@ export function ClientList({
                   >
                     <TableCell className="text-center">
                       <div>
-                        <h3 className="text-sm font-medium">{client.name}</h3>
+                        <div className="flex items-center justify-center gap-1">
+                          <h3 className="text-sm font-medium">{client.name}</h3>
+                          {todoCounts[client._id]?.incomplete > 0 && (
+                            <div title={`${todoCounts[client._id].incomplete} incomplete todo${todoCounts[client._id].incomplete !== 1 ? 's' : ''}`}>
+                              <ClipboardList className="w-3 h-3 text-blue-500" />
+                            </div>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">{client.phoneNumber}</p>
                         <div className="flex gap-1 mt-1 justify-center">
                           <Badge 
@@ -403,7 +412,14 @@ export function ClientList({
               >
                 <CardContent className="p-4">
                   <div>
-                    <h3 className="text-base font-medium">{client.name}</h3>
+                    <div className="flex items-center gap-1">
+                      <h3 className="text-base font-medium">{client.name}</h3>
+                      {todoCounts[client._id]?.incomplete > 0 && (
+                        <div title={`${todoCounts[client._id].incomplete} incomplete todo${todoCounts[client._id].incomplete !== 1 ? 's' : ''}`}>
+                          <ClipboardList className="w-3 h-3 text-blue-500" />
+                        </div>
+                      )}
+                    </div>
                     <a 
                       href={`tel:${client.phoneNumber}`}
                       onClick={(e) => e.stopPropagation()}

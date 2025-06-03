@@ -70,3 +70,37 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+export const getClientTodoCounts = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getCurrentUserIdQuery(ctx);
+    if (!userId) return {};
+
+    // Get all client assignments for this case manager that are not archived
+    const assignments = await ctx.db
+      .query("caseManagerClients")
+      .withIndex("by_case_manager_and_archived", (q) => 
+        q.eq("caseManagerId", userId).eq("archived", false)
+      )
+      .collect();
+
+    const clientIds = assignments.map(assignment => assignment.clientId);
+    const todoCounts: Record<string, { total: number; incomplete: number }> = {};
+
+    // Get todos for each client
+    for (const clientId of clientIds) {
+      const todos = await ctx.db
+        .query("todos")
+        .withIndex("by_client", (q) => q.eq("clientId", clientId))
+        .collect();
+      
+      const total = todos.length;
+      const incomplete = todos.filter(todo => !todo.completed).length;
+      
+      todoCounts[clientId] = { total, incomplete };
+    }
+
+    return todoCounts;
+  },
+});
