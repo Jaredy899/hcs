@@ -10,12 +10,15 @@ import { Trash2 } from "lucide-react";
 
 interface TodoSectionProps {
   clientId: Id<"clients">;
+  pendingChanges: {
+    addTodoChange: (id: Id<"todos">, completed: boolean) => void;
+    getTodoState: (id: Id<"todos">, originalCompleted: boolean) => boolean;
+  };
 }
 
-export function TodoSection({ clientId }: TodoSectionProps) {
+export function TodoSection({ clientId, pendingChanges }: TodoSectionProps) {
   const todos = useQuery(api.todos.list, { clientId }) || [];
   const addTodo = useMutation(api.todos.create);
-  const toggleTodo = useMutation(api.todos.toggle);
   const deleteTodo = useMutation(api.todos.remove);
 
   const [newTodo, setNewTodo] = useState("");
@@ -25,6 +28,11 @@ export function TodoSection({ clientId }: TodoSectionProps) {
     if (!newTodo.trim()) return;
     await addTodo({ clientId, text: newTodo });
     setNewTodo("");
+  };
+
+  const handleToggleTodo = (todoId: Id<"todos">, currentCompleted: boolean) => {
+    const newCompleted = !currentCompleted;
+    pendingChanges.addTodoChange(todoId, newCompleted);
   };
 
   return (
@@ -46,25 +54,28 @@ export function TodoSection({ clientId }: TodoSectionProps) {
           </Button>
         </form>
         <div className="space-y-2 max-h-40 overflow-y-auto">
-          {todos.map((todo) => (
-            <div key={todo._id} className="flex items-center gap-2 p-2 bg-muted/50 rounded-sm">
-              <Checkbox
-                checked={todo.completed}
-                onCheckedChange={() => toggleTodo({ id: todo._id })}
-              />
-              <span className={`flex-grow text-sm ${todo.completed ? "line-through text-muted-foreground" : ""}`}>
-                {todo.text}
-              </span>
-              <Button
-                onClick={() => deleteTodo({ id: todo._id })}
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
+          {todos.map((todo) => {
+            const displayCompleted = pendingChanges.getTodoState(todo._id, todo.completed);
+            return (
+              <div key={todo._id} className="flex items-center gap-2 p-2 bg-muted/50 rounded-sm">
+                <Checkbox
+                  checked={displayCompleted}
+                  onCheckedChange={() => handleToggleTodo(todo._id, displayCompleted)}
+                />
+                <span className={`flex-grow text-sm ${displayCompleted ? "line-through text-muted-foreground" : ""}`}>
+                  {todo.text}
+                </span>
+                <Button
+                  onClick={() => deleteTodo({ id: todo._id })}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

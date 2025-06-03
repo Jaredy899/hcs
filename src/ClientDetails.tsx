@@ -11,6 +11,7 @@ import { NotesSection } from "./components/NotesSection";
 import { LastContactSection } from "./components/LastContactSection";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Archive } from "lucide-react";
+import { usePendingChanges } from "./hooks/usePendingChanges";
 
 export function ClientDetails({
   clientId,
@@ -21,21 +22,44 @@ export function ClientDetails({
 }) {
   const client = useQuery(api.clients.list)?.find((c) => c._id === clientId);
   const archiveClient = useMutation(api.clients.archive);
+  const pendingChanges = usePendingChanges();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        handleClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, []);
+
+  const handleClose = async () => {
+    if (pendingChanges.hasPendingChanges) {
+      try {
+        await pendingChanges.syncChanges();
+        toast.success("Changes saved");
+      } catch (error) {
+        toast.error("Failed to save changes");
+        return; // Don't close if sync failed
+      }
+    }
+    onClose();
+  };
 
   if (!client) return null;
 
   const handleArchive = async () => {
     if (confirm("Are you sure you want to archive this consumer?")) {
+      // Sync any pending changes before archiving
+      if (pendingChanges.hasPendingChanges) {
+        try {
+          await pendingChanges.syncChanges();
+        } catch (error) {
+          toast.error("Failed to save pending changes");
+          return;
+        }
+      }
       await archiveClient({ id: clientId });
       toast.success("Consumer archived");
       onClose();
@@ -45,7 +69,7 @@ export function ClientDetails({
   return (
     <div 
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div 
         className="bg-background rounded-lg shadow-lg w-full max-w-7xl max-h-[95vh] flex flex-col border"
@@ -55,7 +79,7 @@ export function ClientDetails({
         <div className="flex justify-between items-center sticky top-0 bg-background pb-3 border-b z-10 px-4 pt-4 rounded-t-lg">
           <div className="flex items-center gap-4">
             <Button
-              onClick={onClose}
+              onClick={handleClose}
               variant="ghost"
               size="sm"
               className="gap-2"
@@ -64,6 +88,11 @@ export function ClientDetails({
               Back
             </Button>
             <h2 className="text-xl font-bold">{client.name}</h2>
+            {pendingChanges.hasPendingChanges && (
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                Unsaved changes
+              </span>
+            )}
           </div>
           <Button
             onClick={handleArchive}
@@ -83,15 +112,15 @@ export function ClientDetails({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
               <div className="space-y-3">
                 <ContactInformationSection client={client} />
-                <ContactStatusSection client={client} />
+                <ContactStatusSection client={client} pendingChanges={pendingChanges} />
               </div>
-              <LastContactSection client={client} />
-              <ImportantDatesSection client={client} />
+              <LastContactSection client={client} pendingChanges={pendingChanges} />
+              <ImportantDatesSection client={client} pendingChanges={pendingChanges} />
             </div>
 
             {/* Bottom row - 2 columns for todos and notes */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              <TodoSection clientId={clientId} />
+              <TodoSection clientId={clientId} pendingChanges={pendingChanges} />
               <NotesSection clientId={clientId} />
             </div>
           </div>

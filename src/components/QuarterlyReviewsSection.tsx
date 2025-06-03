@@ -21,55 +21,74 @@ interface QuarterlyReviewsSectionProps {
     qr3Completed?: boolean;
     qr4Completed?: boolean;
   };
+  pendingChanges: {
+    addContactChange: (clientId: Id<"clients">, field: "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed", value: boolean) => void;
+    getContactState: (clientId: Id<"clients">, field: "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed", originalValue: boolean) => boolean;
+    addDateChange: (clientId: Id<"clients">, field: "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date", value: number) => void;
+    getDateState: (clientId: Id<"clients">, field: "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date", originalValue: number | undefined) => number | undefined;
+  };
 }
 
-export function QuarterlyReviewsSection({ client }: QuarterlyReviewsSectionProps) {
+export function QuarterlyReviewsSection({ client, pendingChanges }: QuarterlyReviewsSectionProps) {
   const updateContact = useMutation(api.clients.updateContact);
 
   // Add local state for quarterly review dates (month and day for each quarter)
   const [qrDates, setQrDates] = useState(() =>
     [0, 1, 2, 3].map((i) => {
       const qrField = `qr${i + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
-      const date = client?.[qrField] && client[qrField] !== null
-        ? new Date(client[qrField]!)
+      const pendingValue = pendingChanges.getDateState(client._id, qrField, client[qrField] || undefined);
+      const date = pendingValue !== undefined && pendingValue !== null
+        ? new Date(pendingValue)
         : getQuarterlyReviewDates(client?.nextAnnualAssessment || Date.now())[i].date;
       return { month: date.getMonth() + 1, day: date.getDate() };
     })
   );
 
-  // Sync local state with client changes
+  // Sync local state with client changes and pending changes
   useEffect(() => {
     if (client) {
       setQrDates(
         [0, 1, 2, 3].map((i) => {
           const qrField = `qr${i + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
-          const date = client?.[qrField] && client[qrField] !== null
-            ? new Date(client[qrField]!)
+          const pendingValue = pendingChanges.getDateState(client._id, qrField, client[qrField] || undefined);
+          const date = pendingValue !== undefined && pendingValue !== null
+            ? new Date(pendingValue)
             : getQuarterlyReviewDates(client?.nextAnnualAssessment || Date.now())[i].date;
           return { month: date.getMonth() + 1, day: date.getDate() };
         })
       );
     }
-  }, [client]);
+  }, [client, pendingChanges]);
 
   const handleQuarterlyReviewToggle = async (index: number, checked: boolean) => {
     const qrField = `qr${index + 1}Completed` as "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed";
     
     // If this is Q4 being completed, reset all quarterly reviews
     if (index === 3 && checked) {
-      await Promise.all([
-        updateContact({ id: client._id, field: "qr1Completed", value: false }),
-        updateContact({ id: client._id, field: "qr2Completed", value: false }),
-        updateContact({ id: client._id, field: "qr3Completed", value: false }),
-        updateContact({ id: client._id, field: "qr4Completed", value: false })
-      ]);
+      pendingChanges.addContactChange(client._id, "qr1Completed", false);
+      pendingChanges.addContactChange(client._id, "qr2Completed", false);
+      pendingChanges.addContactChange(client._id, "qr3Completed", false);
+      pendingChanges.addContactChange(client._id, "qr4Completed", false);
     } else {
-      await updateContact({
-        id: client._id,
-        field: qrField,
-        value: checked,
-      });
+      pendingChanges.addContactChange(client._id, qrField, checked);
     }
+  };
+
+  const handleQrDateChange = (index: number, month?: number, day?: number) => {
+    const qrDateField = `qr${index + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
+    const { month: currentMonth, day: currentDay } = qrDates[index];
+    
+    const newMonth = month !== undefined ? month : currentMonth;
+    const newDay = day !== undefined ? day : currentDay;
+    const year = new Date().getFullYear();
+    
+    const newDate = new Date(year, newMonth - 1, newDay);
+    pendingChanges.addDateChange(client._id, qrDateField, newDate.getTime());
+    
+    // Update local state
+    setQrDates((prev) =>
+      prev.map((d, i) => i === index ? { month: newMonth, day: newDay } : d)
+    );
   };
 
   return (
@@ -122,12 +141,9 @@ export function QuarterlyReviewsSection({ client }: QuarterlyReviewsSectionProps
       <div className="space-y-2 bg-muted/50 rounded-md p-3">
         {getQuarterlyReviewDates(client.nextAnnualAssessment).map((qr, index) => {
           const qrField = `qr${index + 1}Completed` as "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed";
-          const qrDateField = `qr${index + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
           const { month, day } = qrDates[index];
-          const year = (client[qrDateField] && client[qrDateField] !== null
-            ? new Date(client[qrDateField]!)
-            : qr.date
-          ).getFullYear();
+
+          const displayCompleted = pendingChanges.getContactState(client._id, qrField, client[qrField] || false);
 
           return (
             <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-1">
@@ -137,16 +153,7 @@ export function QuarterlyReviewsSection({ client }: QuarterlyReviewsSectionProps
                   value={month.toString()}
                   onValueChange={(value) => {
                     const newMonth = parseInt(value);
-                    setQrDates((prev) =>
-                      prev.map((d, i) => i === index ? { ...d, month: newMonth } : d)
-                    );
-                    // Use the current day from local state
-                    const newDate = new Date(year, newMonth - 1, day);
-                    updateContact({
-                      id: client._id,
-                      field: qrDateField,
-                      value: newDate.getTime(),
-                    });
+                    handleQrDateChange(index, newMonth, undefined);
                   }}
                 >
                   <SelectTrigger className="h-7 text-xs flex-1">
@@ -171,16 +178,7 @@ export function QuarterlyReviewsSection({ client }: QuarterlyReviewsSectionProps
                   value={day.toString()}
                   onValueChange={(value) => {
                     const newDay = parseInt(value);
-                    setQrDates((prev) =>
-                      prev.map((d, i) => i === index ? { ...d, day: newDay } : d)
-                    );
-                    // Use the current month from local state
-                    const newDate = new Date(year, month - 1, newDay);
-                    updateContact({
-                      id: client._id,
-                      field: qrDateField,
-                      value: newDate.getTime(),
-                    });
+                    handleQrDateChange(index, undefined, newDay);
                   }}
                 >
                   <SelectTrigger className="h-7 text-xs w-16">
@@ -195,7 +193,7 @@ export function QuarterlyReviewsSection({ client }: QuarterlyReviewsSectionProps
                 <div className="flex items-center space-x-1 ml-1">
                   <Checkbox
                     id={`qr-${index}`}
-                    checked={client[qrField] || false}
+                    checked={displayCompleted}
                     onCheckedChange={(checked) => handleQuarterlyReviewToggle(index, checked as boolean)}
                   />
                   <Label htmlFor={`qr-${index}`} className="text-sm">Done</Label>

@@ -11,10 +11,20 @@ interface ContactStatusSectionProps {
     firstContactCompleted?: boolean;
     secondContactCompleted?: boolean;
   };
+  pendingChanges: {
+    addContactChange: (clientId: Id<"clients">, field: "firstContactCompleted" | "secondContactCompleted", value: boolean) => void;
+    getContactState: (clientId: Id<"clients">, field: "firstContactCompleted" | "secondContactCompleted", originalValue: boolean) => boolean;
+  };
 }
 
-export function ContactStatusSection({ client }: ContactStatusSectionProps) {
-  const updateContact = useMutation(api.clients.updateContact);
+export function ContactStatusSection({ client, pendingChanges }: ContactStatusSectionProps) {
+  const handleToggleContact = (field: "firstContactCompleted" | "secondContactCompleted", currentValue: boolean) => {
+    const newValue = !currentValue;
+    pendingChanges.addContactChange(client._id, field, newValue);
+  };
+
+  const firstContactState = pendingChanges.getContactState(client._id, "firstContactCompleted", client.firstContactCompleted || false);
+  const secondContactState = pendingChanges.getContactState(client._id, "secondContactCompleted", client.secondContactCompleted || false);
 
   return (
     <Card>
@@ -25,14 +35,8 @@ export function ContactStatusSection({ client }: ContactStatusSectionProps) {
         <div className="flex items-center space-x-2">
           <Checkbox
             id="first-contact"
-            checked={client.firstContactCompleted || false}
-            onCheckedChange={() =>
-              updateContact({
-                id: client._id,
-                field: "firstContactCompleted",
-                value: !client.firstContactCompleted,
-              })
-            }
+            checked={firstContactState}
+            onCheckedChange={() => handleToggleContact("firstContactCompleted", firstContactState)}
           />
           <Label htmlFor="first-contact" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             First Contact
@@ -41,14 +45,8 @@ export function ContactStatusSection({ client }: ContactStatusSectionProps) {
         <div className="flex items-center space-x-2">
           <Checkbox
             id="second-contact"
-            checked={client.secondContactCompleted || false}
-            onCheckedChange={() =>
-              updateContact({
-                id: client._id,
-                field: "secondContactCompleted",
-                value: !client.secondContactCompleted,
-              })
-            }
+            checked={secondContactState}
+            onCheckedChange={() => handleToggleContact("secondContactCompleted", secondContactState)}
           />
           <Label htmlFor="second-contact" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             Second Contact

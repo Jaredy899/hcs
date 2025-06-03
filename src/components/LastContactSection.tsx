@@ -12,10 +12,31 @@ interface LastContactSectionProps {
     lastContactDate?: number;
     lastFaceToFaceDate?: number;
   };
+  pendingChanges: {
+    addDateChange: (clientId: Id<"clients">, field: "lastContactDate" | "lastFaceToFaceDate", value: number) => void;
+    getDateState: (clientId: Id<"clients">, field: "lastContactDate" | "lastFaceToFaceDate", originalValue: number | undefined) => number | undefined;
+  };
 }
 
-export function LastContactSection({ client }: LastContactSectionProps) {
-  const updateContact = useMutation(api.clients.updateContact);
+export function LastContactSection({ client, pendingChanges }: LastContactSectionProps) {
+  const handleSetToday = (field: "lastContactDate" | "lastFaceToFaceDate") => {
+    const today = new Date();
+    pendingChanges.addDateChange(client._id, field, today.getTime());
+  };
+
+  const handleDateChange = (field: "lastContactDate" | "lastFaceToFaceDate", month?: number, day?: number) => {
+    const currentValue = pendingChanges.getDateState(client._id, field, client[field]);
+    const currentDate = currentValue ? new Date(currentValue) : new Date();
+    
+    const newMonth = month !== undefined ? month : currentDate.getMonth() + 1;
+    const newDay = day !== undefined ? day : currentDate.getDate();
+    
+    const date = new Date(new Date().getFullYear(), newMonth - 1, newDay);
+    pendingChanges.addDateChange(client._id, field, date.getTime());
+  };
+
+  const lastContactValue = pendingChanges.getDateState(client._id, "lastContactDate", client.lastContactDate);
+  const lastFaceToFaceValue = pendingChanges.getDateState(client._id, "lastFaceToFaceDate", client.lastFaceToFaceDate);
 
   return (
     <Card>
@@ -28,14 +49,7 @@ export function LastContactSection({ client }: LastContactSectionProps) {
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Last Contact</span>
             <Button
-              onClick={() => {
-                const today = new Date();
-                updateContact({
-                  id: client._id,
-                  field: "lastContactDate",
-                  value: today.getTime(),
-                });
-              }}
+              onClick={() => handleSetToday("lastContactDate")}
               size="sm"
               className="h-6 px-2 gap-1 text-xs"
             >
@@ -45,16 +59,10 @@ export function LastContactSection({ client }: LastContactSectionProps) {
           </div>
           <div className="flex gap-1">
             <Select
-              value={client.lastContactDate ? (new Date(client.lastContactDate).getMonth() + 1).toString() : ""}
+              value={lastContactValue ? (new Date(lastContactValue).getMonth() + 1).toString() : ""}
               onValueChange={(value) => {
                 const month = parseInt(value);
-                const day = client.lastContactDate ? new Date(client.lastContactDate).getDate() : 1;
-                const date = new Date(new Date().getFullYear(), month - 1, day);
-                updateContact({
-                  id: client._id,
-                  field: "lastContactDate",
-                  value: date.getTime(),
-                });
+                handleDateChange("lastContactDate", month, undefined);
               }}
             >
               <SelectTrigger className="h-7 text-xs">
@@ -76,16 +84,10 @@ export function LastContactSection({ client }: LastContactSectionProps) {
               </SelectContent>
             </Select>
             <Select
-              value={client.lastContactDate ? new Date(client.lastContactDate).getDate().toString() : ""}
+              value={lastContactValue ? new Date(lastContactValue).getDate().toString() : ""}
               onValueChange={(value) => {
-                const month = client.lastContactDate ? new Date(client.lastContactDate).getMonth() + 1 : 1;
                 const day = parseInt(value);
-                const date = new Date(new Date().getFullYear(), month - 1, day);
-                updateContact({
-                  id: client._id,
-                  field: "lastContactDate",
-                  value: date.getTime(),
-                });
+                handleDateChange("lastContactDate", undefined, day);
               }}
             >
               <SelectTrigger className="h-7 text-xs">
@@ -99,8 +101,8 @@ export function LastContactSection({ client }: LastContactSectionProps) {
             </Select>
           </div>
           <p className="text-sm text-muted-foreground">
-            {client.lastContactDate
-              ? new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+            {lastContactValue
+              ? new Date(lastContactValue).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
               : "No contact recorded"}
           </p>
         </div>
@@ -110,14 +112,7 @@ export function LastContactSection({ client }: LastContactSectionProps) {
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Last Face to Face</span>
             <Button
-              onClick={() => {
-                const today = new Date();
-                updateContact({
-                  id: client._id,
-                  field: "lastFaceToFaceDate",
-                  value: today.getTime(),
-                });
-              }}
+              onClick={() => handleSetToday("lastFaceToFaceDate")}
               size="sm"
               className="h-6 px-2 gap-1 text-xs"
             >
@@ -127,16 +122,10 @@ export function LastContactSection({ client }: LastContactSectionProps) {
           </div>
           <div className="flex gap-1">
             <Select
-              value={client.lastFaceToFaceDate ? (new Date(client.lastFaceToFaceDate).getMonth() + 1).toString() : ""}
+              value={lastFaceToFaceValue ? (new Date(lastFaceToFaceValue).getMonth() + 1).toString() : ""}
               onValueChange={(value) => {
                 const month = parseInt(value);
-                const day = client.lastFaceToFaceDate ? new Date(client.lastFaceToFaceDate).getDate() : 1;
-                const date = new Date(new Date().getFullYear(), month - 1, day);
-                updateContact({
-                  id: client._id,
-                  field: "lastFaceToFaceDate",
-                  value: date.getTime(),
-                });
+                handleDateChange("lastFaceToFaceDate", month, undefined);
               }}
             >
               <SelectTrigger className="h-7 text-xs">
@@ -158,16 +147,10 @@ export function LastContactSection({ client }: LastContactSectionProps) {
               </SelectContent>
             </Select>
             <Select
-              value={client.lastFaceToFaceDate ? new Date(client.lastFaceToFaceDate).getDate().toString() : ""}
+              value={lastFaceToFaceValue ? new Date(lastFaceToFaceValue).getDate().toString() : ""}
               onValueChange={(value) => {
-                const month = client.lastFaceToFaceDate ? new Date(client.lastFaceToFaceDate).getMonth() + 1 : 1;
                 const day = parseInt(value);
-                const date = new Date(new Date().getFullYear(), month - 1, day);
-                updateContact({
-                  id: client._id,
-                  field: "lastFaceToFaceDate",
-                  value: date.getTime(),
-                });
+                handleDateChange("lastFaceToFaceDate", undefined, day);
               }}
             >
               <SelectTrigger className="h-7 text-xs">
@@ -182,13 +165,13 @@ export function LastContactSection({ client }: LastContactSectionProps) {
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">
-              {client.lastFaceToFaceDate
-                ? new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+              {lastFaceToFaceValue
+                ? new Date(lastFaceToFaceValue).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                 : "No face to face recorded"}
             </p>
-            {client.lastFaceToFaceDate && (
+            {lastFaceToFaceValue && (
               <p className="text-sm font-medium">
-                Next due: {new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                Next due: {new Date(lastFaceToFaceValue + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
               </p>
             )}
           </div>

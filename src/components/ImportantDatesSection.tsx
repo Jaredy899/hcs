@@ -20,23 +20,46 @@ interface ImportantDatesSectionProps {
     qr3Completed?: boolean;
     qr4Completed?: boolean;
   };
+  pendingChanges: {
+    addContactChange: (clientId: Id<"clients">, field: "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed", value: boolean) => void;
+    getContactState: (clientId: Id<"clients">, field: "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed", originalValue: boolean) => boolean;
+    addDateChange: (clientId: Id<"clients">, field: "nextAnnualAssessment" | "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date", value: number) => void;
+    getDateState: (clientId: Id<"clients">, field: "nextAnnualAssessment" | "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date", originalValue: number | undefined) => number | undefined;
+  };
 }
 
-export function ImportantDatesSection({ client }: ImportantDatesSectionProps) {
+export function ImportantDatesSection({ client, pendingChanges }: ImportantDatesSectionProps) {
   const updateContact = useMutation(api.clients.updateContact);
 
+  const annualAssessmentValue = pendingChanges.getDateState(client._id, "nextAnnualAssessment", client.nextAnnualAssessment) || client.nextAnnualAssessment;
+
   const [annualMonth, setAnnualMonth] = useState(() => {
-    if (client?.nextAnnualAssessment) {
-      return new Date(client.nextAnnualAssessment).getMonth() + 1;
-    }
-    return new Date().getMonth() + 1;
+    return new Date(annualAssessmentValue).getMonth() + 1;
   });
   const [annualDay, setAnnualDay] = useState(() => {
-    if (client?.nextAnnualAssessment) {
-      return new Date(client.nextAnnualAssessment).getDate();
-    }
-    return 1;
+    return new Date(annualAssessmentValue).getDate();
   });
+
+  // Update local state when the pending value changes
+  useEffect(() => {
+    const currentValue = annualAssessmentValue;
+    if (currentValue) {
+      const date = new Date(currentValue);
+      setAnnualMonth(date.getMonth() + 1);
+      setAnnualDay(date.getDate());
+    }
+  }, [annualAssessmentValue]);
+
+  const handleAnnualDateChange = (month?: number, day?: number) => {
+    const newMonth = month !== undefined ? month : annualMonth;
+    const newDay = day !== undefined ? day : annualDay;
+    
+    const annualDate = new Date(new Date().getFullYear(), newMonth - 1, newDay);
+    pendingChanges.addDateChange(client._id, "nextAnnualAssessment", annualDate.getTime());
+    
+    if (month !== undefined) setAnnualMonth(month);
+    if (day !== undefined) setAnnualDay(day);
+  };
 
   const months = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -56,13 +79,7 @@ export function ImportantDatesSection({ client }: ImportantDatesSectionProps) {
               value={annualMonth.toString()}
               onValueChange={(value) => {
                 const newMonth = parseInt(value);
-                setAnnualMonth(newMonth);
-                const annualDate = new Date(new Date().getFullYear(), newMonth - 1, annualDay);
-                updateContact({
-                  id: client._id,
-                  field: "nextAnnualAssessment",
-                  value: annualDate.getTime(),
-                });
+                handleAnnualDateChange(newMonth, undefined);
               }}
             >
               <SelectTrigger className="h-8 text-xs">
@@ -80,13 +97,7 @@ export function ImportantDatesSection({ client }: ImportantDatesSectionProps) {
               value={annualDay.toString()}
               onValueChange={(value) => {
                 const newDay = parseInt(value);
-                setAnnualDay(newDay);
-                const annualDate = new Date(new Date().getFullYear(), annualMonth - 1, newDay);
-                updateContact({
-                  id: client._id,
-                  field: "nextAnnualAssessment",
-                  value: annualDate.getTime(),
-                });
+                handleAnnualDateChange(undefined, newDay);
               }}
             >
               <SelectTrigger className="h-8 text-xs">
@@ -103,7 +114,7 @@ export function ImportantDatesSection({ client }: ImportantDatesSectionProps) {
           </div>
         </div>
 
-        <QuarterlyReviewsSection client={client} />
+        <QuarterlyReviewsSection client={client} pendingChanges={pendingChanges} />
       </CardContent>
     </Card>
   );
