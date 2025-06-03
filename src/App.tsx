@@ -110,10 +110,10 @@ function Content({
   return (
     <div className="flex flex-col gap-8">
       <Unauthenticated>
-        <div className="text-center px-4">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
           <h1 className="text-3xl sm:text-5xl font-bold mb-4">HCS Case Management System</h1>
-          <p className="text-lg sm:text-xl text-muted-foreground mb-2">Sign in with your HCS credentials</p>
-          <p className="text-sm text-muted-foreground">Use your standard HCS username and password</p>
+          {/* <p className="text-lg sm:text-xl text-muted-foreground mb-2">Sign in with your HCS credentials</p>
+          <p className="text-sm text-muted-foreground">Use your standard HCS username and password</p> */}
           <div className="mt-8">
             <SignInButton mode="modal">
               <Button size="lg">
