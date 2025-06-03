@@ -218,31 +218,33 @@ export function ClientList({
   return (
     <div>
       <div className="mb-6 space-y-4">
-        <div>
-          <label htmlFor="search" className="block text-sm font-medium text-foreground mb-2">
-            Search Clients
-          </label>
-          <Input
-            id="search"
-            ref={searchInputRef}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Search by name... (Press Enter when one result, Esc to clear)"
-            autoFocus
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Sort by:</label>
-          <Select value={sortBy} onValueChange={(value: 'first' | 'last') => setSortBy(value)}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="first">First Name</SelectItem>
-              <SelectItem value="last">Last Name</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="search" className="block text-sm font-medium text-foreground mb-2">
+              Search Clients
+            </label>
+            <Input
+              id="search"
+              ref={searchInputRef}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search by name... (Press Enter when one result, Esc to clear)"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">Sort by:</label>
+            <Select value={sortBy} onValueChange={(value: 'first' | 'last') => setSortBy(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="first">First Name</SelectItem>
+                <SelectItem value="last">Last Name</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
