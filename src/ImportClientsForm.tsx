@@ -2,8 +2,44 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 
+// Proper CSV parser that handles quoted fields with commas
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < line.length) {
+    const char = line[i];
+    
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        // Handle escaped quotes
+        current += '"';
+        i += 2;
+      } else {
+        // Toggle quote state
+        inQuotes = !inQuotes;
+        i++;
+      }
+    } else if (char === ',' && !inQuotes) {
+      // End of field
+      result.push(current.trim());
+      current = '';
+      i++;
+    } else {
+      current += char;
+      i++;
+    }
+  }
+  
+  // Add the last field
+  result.push(current.trim());
+  return result;
+}
+
 export function ImportClientsForm({ onClose }: { onClose: () => void }) {
-  const bulkImport = useMutation(api.clients.bulkImportSimple);
+  const bulkImport = useMutation(api.clients.bulkImport);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -13,39 +49,78 @@ export function ImportClientsForm({ onClose }: { onClose: () => void }) {
 
     try {
       const text = await file.text();
-      const lines = text.split('\n');
+      const lines = text.split('\n').map(line => line.trim()).filter(line => line);
       
-      // Skip header row and empty lines
-      const data = lines.slice(1).filter(line => line.trim());
-      
-      const clients = data.map(line => {
-        const [
-          id,
-          firstName,
-          lastName,
-          preferredName,
-          clientId,
-          phoneNumber,
-          planEndDate,
-          insurance
-        ] = line.split(',').map(field => field.trim().replace(/^"|"$/g, ''));
+      if (lines.length < 2) {
+        throw new Error('CSV file must have at least a header row and one data row');
+      }
 
-        return {
-          firstName,
-          lastName,
-          preferredName: preferredName || undefined,
-          clientId,
-          phoneNumber,
-          insurance,
-          annualAssessmentDate: planEndDate // Map plan end date to annual assessment date
-        };
-      });
+      // Parse header to understand column structure
+      const headerFields = parseCSVLine(lines[0]);
+      console.log('CSV Headers:', headerFields);
+      
+      // Skip header row and parse data
+      const clients = [];
+      const errors: string[] = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        try {
+          const fields = parseCSVLine(lines[i]);
+          
+          // Map fields based on your CSV structure:
+          // Id, First Name, Last Name, Preferred Name, Client/Record ID, Cell Phone, Plan Program, Plan End Date, Primary Provider, Authorization ID
+          const [
+            id,
+            firstName,
+            lastName,
+            preferredName,
+            clientRecordId,
+            cellPhone,
+            planProgram,
+            planEndDate,
+            primaryProvider,
+            authorizationId
+          ] = fields;
+
+          // Skip rows with missing essential data
+          if (!firstName || !lastName) {
+            errors.push(`Row ${i + 1}: Missing first name or last name`);
+            continue;
+          }
+
+          const client = {
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            preferredName: preferredName?.trim() || undefined,
+            clientId: clientRecordId?.trim() || id?.trim(),
+            phoneNumber: cellPhone?.trim() || "No phone provided",
+            insurance: authorizationId?.trim() || "No insurance provided",
+            annualAssessmentDate: planEndDate?.trim() || "12/31/2025",
+            planProgram: planProgram?.trim() || undefined,
+          };
+
+          clients.push(client);
+        } catch (rowError) {
+          errors.push(`Row ${i + 1}: ${rowError instanceof Error ? rowError.message : 'Parse error'}`);
+        }
+      }
+
+      if (clients.length === 0) {
+        throw new Error('No valid client records found in CSV');
+      }
+
+      console.log(`Parsed ${clients.length} clients, ${errors.length} errors`);
+      if (errors.length > 0) {
+        console.warn('Parsing errors:', errors);
+      }
 
       await bulkImport({ 
-        clients,
-        deduplicationStrategy: "first" // Keep first occurrence of duplicate clients
+        clients
       });
-      setSuccess(`Successfully imported ${clients.length} clients`);
+      
+      const successMessage = `Successfully imported clients with WCCSS prioritization`;
+      const warningMessage = errors.length > 0 ? ` (${errors.length} rows had errors and were skipped)` : '';
+      setSuccess(successMessage + warningMessage);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to import clients');
