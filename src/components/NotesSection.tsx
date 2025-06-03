@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 interface NotesSectionProps {
   clientId: Id<"clients">;
@@ -22,50 +26,52 @@ export function NotesSection({ clientId }: NotesSectionProps) {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
-      <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Notes</h3>
-      <form onSubmit={handleAddNote} className="mb-4">
-        <textarea
-          value={newNote}
-          onChange={(e) => setNewNote(e.target.value)}
-          placeholder="Add new note"
-          className="w-full p-2 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          rows={3}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleAddNote(e);
-            }
-          }}
-        />
-        <button
-          type="submit"
-          className="w-full mt-2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-        >
-          Add Note
-        </button>
-      </form>
-      <div className="space-y-3">
-        {notes.map((note) => (
-          <div key={note._id} className="bg-white dark:bg-gray-800 p-4 rounded-md">
-            <div className="flex justify-between items-start">
-              <p className="text-gray-900 dark:text-gray-100">{note.text}</p>
-              <button
-                onClick={() => deleteNote({ id: note._id })}
-                className="text-red-600 hover:text-red-800 text-sm transition-colors"
-              >
-                Delete
-              </button>
+    <Card>
+      <CardHeader className="px-4 pt-3 pb-2">
+        <CardTitle className="text-sm font-semibold">Notes</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 px-4 pb-3">
+        <form onSubmit={handleAddNote} className="space-y-2">
+          <Textarea
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            placeholder="Add new note"
+            className="min-h-[60px] resize-none text-sm"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleAddNote(e);
+              }
+            }}
+          />
+          <Button type="submit" size="sm" className="w-full h-7 text-xs">
+            Add Note
+          </Button>
+        </form>
+        <div className="space-y-2 max-h-40 overflow-y-auto">
+          {notes.map((note) => (
+            <div key={note._id} className="bg-muted/50 p-2 rounded-sm">
+              <div className="flex justify-between items-start gap-2">
+                <p className="text-sm flex-grow">{note.text}</p>
+                <Button
+                  onClick={() => deleteNote({ id: note._id })}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {new Date(note.createdAt).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric'
+                })}
+              </p>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-              {new Date(note.createdAt).toLocaleDateString(undefined, {
-                month: 'short',
-                day: 'numeric'
-              })}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 } 

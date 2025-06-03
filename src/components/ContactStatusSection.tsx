@@ -1,6 +1,9 @@
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface ContactStatusSectionProps {
   client: {
@@ -14,40 +17,44 @@ export function ContactStatusSection({ client }: ContactStatusSectionProps) {
   const updateContact = useMutation(api.clients.updateContact);
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
-      <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Contact Status</h3>
-      <div className="space-y-3">
-        <label className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={client.firstContactCompleted}
-            onChange={() =>
+    <Card>
+      <CardHeader className="px-3 pt-3 pb-0">
+        <CardTitle className="text-sm font-semibold">Contact Status</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6 px-3 py-9">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="first-contact"
+            checked={client.firstContactCompleted || false}
+            onCheckedChange={() =>
               updateContact({
                 id: client._id,
                 field: "firstContactCompleted",
                 value: !client.firstContactCompleted,
               })
             }
-            className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700"
           />
-          <span className="text-gray-700 dark:text-gray-300">First Contact</span>
-        </label>
-        <label className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={client.secondContactCompleted}
-            onChange={() =>
+          <Label htmlFor="first-contact" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            First Contact
+          </Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="second-contact"
+            checked={client.secondContactCompleted || false}
+            onCheckedChange={() =>
               updateContact({
                 id: client._id,
                 field: "secondContactCompleted",
                 value: !client.secondContactCompleted,
               })
             }
-            className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700"
           />
-          <span className="text-gray-700 dark:text-gray-300">Second Contact</span>
-        </label>
-      </div>
-    </div>
+          <Label htmlFor="second-contact" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            Second Contact
+          </Label>
+        </div>
+      </CardContent>
+    </Card>
   );
 } 

@@ -8,6 +8,7 @@ import { ClientDetails } from "./ClientDetails";
 import { AddClientForm } from "./AddClientForm";
 import { Id } from "../convex/_generated/dataModel";
 import { ThemeSwitcher } from "./ThemeSwitcher";
+import { Button } from "@/components/ui/button";
 
 export default function App() {
   const [selectedClientId, setSelectedClientId] = useState<Id<"clients"> | null>(null);
@@ -15,8 +16,8 @@ export default function App() {
   const { signOut } = useClerk();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark transition-colors">
-      <header className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm p-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-gray-200 dark:border-gray-800">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm p-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-b">
         <div className="flex items-center gap-2">
           <img 
             src="https://highlandscsb.org/wp-content/uploads/2012/10/favicon.png" 
@@ -28,25 +29,26 @@ export default function App() {
         <div className="flex items-center gap-4 w-full sm:w-auto">
           <ThemeSwitcher />
           <Authenticated>
-            <button
+            <Button
               onClick={() => setShowAddClient(true)}
-              className="w-full sm:w-auto bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 transition-colors"
+              className="w-full sm:w-auto"
             >
               Add Consumer
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => signOut()}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+              variant="destructive"
+              className="w-full sm:w-auto"
             >
               Sign Out
-            </button>
+            </Button>
             <UserButton />
           </Authenticated>
           <Unauthenticated>
             <SignInButton mode="modal">
-              <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+              <Button>
                 Sign In
-              </button>
+              </Button>
             </SignInButton>
           </Unauthenticated>
         </div>
@@ -99,7 +101,7 @@ function Content({
   if (isLoading || (isAuthenticated && currentUser === undefined)) {
     return (
       <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <span className="ml-2">Loading...</span>
       </div>
     );
@@ -110,13 +112,13 @@ function Content({
       <Unauthenticated>
         <div className="text-center px-4">
           <h1 className="text-3xl sm:text-5xl font-bold mb-4">HCS Case Management System</h1>
-          <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-2">Sign in with your HCS credentials</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">Use your standard HCS username and password</p>
+          <p className="text-lg sm:text-xl text-muted-foreground mb-2">Sign in with your HCS credentials</p>
+          <p className="text-sm text-muted-foreground">Use your standard HCS username and password</p>
           <div className="mt-8">
             <SignInButton mode="modal">
-              <button className="bg-blue-500 text-white px-6 py-3 rounded-lg text-lg hover:bg-blue-600 transition-colors">
+              <Button size="lg">
                 Sign In to Continue
-              </button>
+              </Button>
             </SignInButton>
           </div>
         </div>
@@ -137,7 +139,7 @@ function Content({
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold">Your Caseload</h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-muted-foreground">
                   {clients.length} consumer{clients.length !== 1 ? 's' : ''} assigned
                 </p>
               </div>

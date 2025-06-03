@@ -3,6 +3,10 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { getQuarterlyReviewDates } from "./utils";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface QuarterlyReviewsSectionProps {
   client: {
@@ -71,8 +75,8 @@ export function QuarterlyReviewsSection({ client }: QuarterlyReviewsSectionProps
   return (
     <div>
       <div className="flex justify-between items-center mb-2">
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Quarterly Reviews</p>
-        <button
+        <p className="text-sm font-medium">Quarterly Reviews</p>
+        <Button
           onClick={() => {
             // First, get the current annual assessment date
             const annualDate = new Date(client.nextAnnualAssessment);
@@ -108,12 +112,14 @@ export function QuarterlyReviewsSection({ client }: QuarterlyReviewsSectionProps
               value: qrDates[0].date.getTime(),
             });
           }}
-          className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+          variant="ghost"
+          size="sm"
+          className="text-xs h-6 px-2"
         >
           Reset to Calculated Dates
-        </button>
+        </Button>
       </div>
-      <div className="space-y-2 bg-white dark:bg-gray-800 rounded-md p-3">
+      <div className="space-y-2 bg-muted/50 rounded-md p-3">
         {getQuarterlyReviewDates(client.nextAnnualAssessment).map((qr, index) => {
           const qrField = `qr${index + 1}Completed` as "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed";
           const qrDateField = `qr${index + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
@@ -125,12 +131,12 @@ export function QuarterlyReviewsSection({ client }: QuarterlyReviewsSectionProps
 
           return (
             <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-1">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-20">{qr.label}:</span>
+              <span className="text-sm font-medium text-muted-foreground w-20">{qr.label}:</span>
               <div className="flex items-center gap-1 flex-1">
-                <select
-                  value={month}
-                  onChange={(e) => {
-                    const newMonth = parseInt(e.target.value);
+                <Select
+                  value={month.toString()}
+                  onValueChange={(value) => {
+                    const newMonth = parseInt(value);
                     setQrDates((prev) =>
                       prev.map((d, i) => i === index ? { ...d, month: newMonth } : d)
                     );
@@ -142,25 +148,29 @@ export function QuarterlyReviewsSection({ client }: QuarterlyReviewsSectionProps
                       value: newDate.getTime(),
                     });
                   }}
-                  className="text-sm rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 >
-                  <option value="1">Jan</option>
-                  <option value="2">Feb</option>
-                  <option value="3">Mar</option>
-                  <option value="4">Apr</option>
-                  <option value="5">May</option>
-                  <option value="6">Jun</option>
-                  <option value="7">Jul</option>
-                  <option value="8">Aug</option>
-                  <option value="9">Sep</option>
-                  <option value="10">Oct</option>
-                  <option value="11">Nov</option>
-                  <option value="12">Dec</option>
-                </select>
-                <select
-                  value={day}
-                  onChange={(e) => {
-                    const newDay = parseInt(e.target.value);
+                  <SelectTrigger className="h-7 text-xs flex-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Jan</SelectItem>
+                    <SelectItem value="2">Feb</SelectItem>
+                    <SelectItem value="3">Mar</SelectItem>
+                    <SelectItem value="4">Apr</SelectItem>
+                    <SelectItem value="5">May</SelectItem>
+                    <SelectItem value="6">Jun</SelectItem>
+                    <SelectItem value="7">Jul</SelectItem>
+                    <SelectItem value="8">Aug</SelectItem>
+                    <SelectItem value="9">Sep</SelectItem>
+                    <SelectItem value="10">Oct</SelectItem>
+                    <SelectItem value="11">Nov</SelectItem>
+                    <SelectItem value="12">Dec</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={day.toString()}
+                  onValueChange={(value) => {
+                    const newDay = parseInt(value);
                     setQrDates((prev) =>
                       prev.map((d, i) => i === index ? { ...d, day: newDay } : d)
                     );
@@ -172,21 +182,24 @@ export function QuarterlyReviewsSection({ client }: QuarterlyReviewsSectionProps
                       value: newDate.getTime(),
                     });
                   }}
-                  className="text-sm rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 w-16 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 >
-                  {Array.from({length: 31}, (_, i) => i + 1).map(dayOption => (
-                    <option key={dayOption} value={dayOption}>{dayOption}</option>
-                  ))}
-                </select>
-                <label className="flex items-center gap-1 ml-1">
-                  <input
-                    type="checkbox"
+                  <SelectTrigger className="h-7 text-xs w-16">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({length: 31}, (_, i) => i + 1).map(dayOption => (
+                      <SelectItem key={dayOption} value={dayOption.toString()}>{dayOption}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex items-center space-x-1 ml-1">
+                  <Checkbox
+                    id={`qr-${index}`}
                     checked={client[qrField] || false}
-                    onChange={(e) => handleQuarterlyReviewToggle(index, e.target.checked)}
-                    className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 dark:bg-gray-700"
+                    onCheckedChange={(checked) => handleQuarterlyReviewToggle(index, checked as boolean)}
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Done</span>
-                </label>
+                  <Label htmlFor={`qr-${index}`} className="text-sm">Done</Label>
+                </div>
               </div>
             </div>
           );

@@ -9,6 +9,8 @@ import { ContactStatusSection } from "./components/ContactStatusSection";
 import { TodoSection } from "./components/TodoSection";
 import { NotesSection } from "./components/NotesSection";
 import { LastContactSection } from "./components/LastContactSection";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Archive } from "lucide-react";
 
 export function ClientDetails({
   clientId,
@@ -42,45 +44,55 @@ export function ClientDetails({
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-6xl max-h-[90vh] flex flex-col"
+        className="bg-background rounded-lg shadow-lg w-full max-w-7xl max-h-[95vh] flex flex-col border"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky header */}
-        <div className="flex justify-between items-center sticky top-0 bg-white dark:bg-gray-800 pb-4 border-b border-gray-200 dark:border-gray-700 z-10 px-6 pt-6 rounded-t-lg">
+        <div className="flex justify-between items-center sticky top-0 bg-background pb-3 border-b z-10 px-4 pt-4 rounded-t-lg">
           <div className="flex items-center gap-4">
-            <button
+            <Button
               onClick={onClose}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+              variant="ghost"
+              size="sm"
+              className="gap-2"
             >
-              ← Back
-            </button>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{client.name}</h2>
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <h2 className="text-xl font-bold">{client.name}</h2>
           </div>
-          <button
+          <Button
             onClick={handleArchive}
-            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
+            variant="destructive"
+            size="sm"
+            className="gap-2"
           >
+            <Archive className="h-4 w-4" />
             Archive
-          </button>
+          </Button>
         </div>
         
         {/* Scrollable content */}
-        <div className="overflow-y-auto p-6 flex-1">
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <ContactInformationSection client={client} />
+        <div className="overflow-y-auto p-4 flex-1">
+          <div className="space-y-4">
+            {/* Top row - 3 columns */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <div className="space-y-3">
+                <ContactInformationSection client={client} />
+                <ContactStatusSection client={client} />
+              </div>
+              <LastContactSection client={client} />
               <ImportantDatesSection client={client} />
-              <ContactStatusSection client={client} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Bottom row - 2 columns for todos and notes */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               <TodoSection clientId={clientId} />
               <NotesSection clientId={clientId} />
-              <LastContactSection client={client} />
             </div>
           </div>
         </div>

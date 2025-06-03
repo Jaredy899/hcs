@@ -2,6 +2,11 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { useState, KeyboardEvent, useEffect, useRef } from "react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 function getUpcomingDates(client: any) {
   const today = new Date();
@@ -210,120 +215,117 @@ export function ClientList({
 
   return (
     <div>
-      <div className="mb-4 space-y-4">
+      <div className="mb-6 space-y-4">
         <div>
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="search" className="block text-sm font-medium text-foreground mb-2">
             Search Clients
           </label>
-          <input
-            type="text"
+          <Input
             id="search"
             ref={searchInputRef}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search by name... (Press Enter when one result, Esc to clear)"
-            className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             autoFocus
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sort by:</label>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'first' | 'last')}
-            className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          >
-            <option value="first">First Name</option>
-            <option value="last">Last Name</option>
-          </select>
+          <label className="block text-sm font-medium text-foreground mb-2">Sort by:</label>
+          <Select value={sortBy} onValueChange={(value: 'first' | 'last') => setSortBy(value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="first">First Name</SelectItem>
+              <SelectItem value="last">Last Name</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="divide-y divide-gray-200">
+      <div className="space-y-4">
         {/* Desktop table view */}
         <div className="hidden md:block">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th 
-                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-muted/50"
                   onClick={() => handleColumnSort('name')}
                 >
                   Consumer{renderSortIndicator('name')}
-                </th>
-                <th 
-                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                </TableHead>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-muted/50"
                   onClick={() => handleColumnSort('annualAssessment')}
                 >
                   Annual Assessment{renderSortIndicator('annualAssessment')}
-                </th>
-                <th 
-                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                </TableHead>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-muted/50"
                   onClick={() => handleColumnSort('nextQR')}
                 >
                   Next QR{renderSortIndicator('nextQR')}
-                </th>
-                <th 
-                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                </TableHead>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-muted/50"
                   onClick={() => handleColumnSort('lastContact')}
                 >
                   Last Contact{renderSortIndicator('lastContact')}
-                </th>
-                <th 
-                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                </TableHead>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-muted/50"
                   onClick={() => handleColumnSort('lastF2F')}
                 >
                   Last Face to Face{renderSortIndicator('lastF2F')}
-                </th>
-                <th 
-                  className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                </TableHead>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-muted/50"
                   onClick={() => handleColumnSort('nextF2F')}
                 >
                   Next Face to Face{renderSortIndicator('nextF2F')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filteredClients.map((client) => {
                 const upcomingDates = getUpcomingDates(client);
                 
                 return (
-                  <tr
+                  <TableRow
                     key={client._id}
                     className={`cursor-pointer transition-colors ${
                       client._id === selectedClientId 
-                        ? "bg-indigo-50 dark:bg-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/70" 
-                        : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                        ? "bg-muted/50" 
+                        : "hover:bg-muted/25"
                     }`}
                     onClick={() => onSelectClient(client._id)}
                   >
-                    <td className="px-3 py-2">
-                      <div className="text-center">
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{client.name}</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{client.phoneNumber}</p>
+                    <TableCell className="text-center">
+                      <div>
+                        <h3 className="text-sm font-medium">{client.name}</h3>
+                        <p className="text-xs text-muted-foreground">{client.phoneNumber}</p>
                         <div className="flex gap-1 mt-1 justify-center">
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                            client.firstContactCompleted 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-red-100 text-red-800"
-                          }`}>
+                          <Badge 
+                            variant={client.firstContactCompleted ? "secondary" : "destructive"} 
+                            className={`text-xs ${client.firstContactCompleted ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}`}
+                          >
                             {client.firstContactCompleted ? "1st Contact ✓" : "1st Contact ✗"}
-                          </span>
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                            client.secondContactCompleted 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-red-100 text-red-800"
-                          }`}>
+                          </Badge>
+                          <Badge 
+                            variant={client.secondContactCompleted ? "secondary" : "destructive"} 
+                            className={`text-xs ${client.secondContactCompleted ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}`}
+                          >
                             {client.secondContactCompleted ? "2nd Contact ✓" : "2nd Contact ✗"}
-                          </span>
+                          </Badge>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
+                    </TableCell>
+                    <TableCell className="text-center text-xs text-muted-foreground">
                       {client.nextAnnualAssessment
                         ? (
-                          <span className={upcomingDates.isAnnualDueNextMonth ? "text-red-600 font-medium" : ""}>
+                          <span className={upcomingDates.isAnnualDueNextMonth ? "text-destructive font-medium" : ""}>
                             {new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",
@@ -332,35 +334,35 @@ export function ClientList({
                           </span>
                         )
                         : "Not set"}
-                    </td>
-                    <td className="px-3 py-2 text-center text-xs font-bold text-gray-900 dark:text-gray-100">
+                    </TableCell>
+                    <TableCell className="text-center text-xs font-bold">
                       {upcomingDates.nextQRDate ? (
                         <div className="flex items-center justify-center gap-1">
-                          <span className={upcomingDates.isQRDue ? "text-red-600 font-medium" : ""}>
+                          <span className={upcomingDates.isQRDue ? "text-destructive font-medium" : ""}>
                             {upcomingDates.nextQRDate.toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",
                             })}
                           </span>
-                          <span className="text-gray-500 text-xs dark:text-gray-400">
+                          <span className="text-muted-foreground text-xs">
                             (Q{upcomingDates.nextQRIndex + 1})
                           </span>
                         </div>
                       ) : (
                         "Not set"
                       )}
-                    </td>
-                    <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
+                    </TableCell>
+                    <TableCell className="text-center text-xs text-muted-foreground">
                       {client.lastContactDate
                         ? new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                         : "No contact recorded"}
-                    </td>
-                    <td className="px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
+                    </TableCell>
+                    <TableCell className="text-center text-xs text-muted-foreground">
                       {client.lastFaceToFaceDate
                         ? new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                         : "No face to face recorded"}
-                    </td>
-                    <td className="px-3 py-2 text-center text-xs font-bold text-gray-900 dark:text-gray-100">
+                    </TableCell>
+                    <TableCell className="text-center text-xs font-bold">
                       {client.lastFaceToFaceDate
                         ? (() => {
                             const nextFaceToFaceDate = new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000));
@@ -369,7 +371,7 @@ export function ClientList({
                             const isDueSoon = daysUntilNext <= 15;
                             
                             return (
-                              <span className={isDueSoon ? "text-red-600" : ""}>
+                              <span className={isDueSoon ? "text-destructive" : ""}>
                                 {nextFaceToFaceDate.toLocaleDateString(undefined, {
                                   month: "short",
                                   day: "numeric",
@@ -378,12 +380,12 @@ export function ClientList({
                             );
                           })()
                         : "Not applicable"}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
 
         {/* Mobile card view */}
@@ -392,32 +394,36 @@ export function ClientList({
             const upcomingDates = getUpcomingDates(client);
             
             return (
-              <div
+              <Card
                 key={client._id}
-                className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 cursor-pointer transition-colors ${
-                  client._id === selectedClientId ? "ring-2 ring-indigo-500" : ""
+                className={`cursor-pointer transition-colors ${
+                  client._id === selectedClientId ? "ring-2 ring-primary" : ""
                 }`}
                 onClick={() => onSelectClient(client._id)}
               >
-                <div>
-                  <h3 className="text-base font-medium text-gray-900 dark:text-gray-100">{client.name}</h3>
-                  <a 
-                    href={`tel:${client.phoneNumber}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {client.phoneNumber}
-                  </a>
-                </div>
-              </div>
+                <CardContent className="p-4">
+                  <div>
+                    <h3 className="text-base font-medium">{client.name}</h3>
+                    <a 
+                      href={`tel:${client.phoneNumber}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      {client.phoneNumber}
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
 
         {clients.length === 0 && (
-          <div className="p-4 text-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            No consumers yet
-          </div>
+          <Card>
+            <CardContent className="p-4 text-center text-muted-foreground">
+              No consumers yet
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

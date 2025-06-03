@@ -3,6 +3,9 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { QuarterlyReviewsSection } from "./QuarterlyReviewsSection";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface ImportantDatesSectionProps {
   client: {
@@ -41,16 +44,18 @@ export function ImportantDatesSection({ client }: ImportantDatesSectionProps) {
   ];
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
-      <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Important Dates</h3>
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Annual Assessment Date</label>
-          <div className="mt-1 flex gap-2">
-            <select
-              value={annualMonth}
-              onChange={(e) => {
-                const newMonth = parseInt(e.target.value);
+    <Card>
+      <CardHeader className="px-4 pt-3 pb-2">
+        <CardTitle className="text-sm font-semibold">Important Dates</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 px-4 pb-3">
+        <div className="space-y-2">
+          <Label className="text-sm">Annual Assessment Date</Label>
+          <div className="flex gap-2">
+            <Select
+              value={annualMonth.toString()}
+              onValueChange={(value) => {
+                const newMonth = parseInt(value);
                 setAnnualMonth(newMonth);
                 const annualDate = new Date(new Date().getFullYear(), newMonth - 1, annualDay);
                 updateContact({
@@ -59,19 +64,22 @@ export function ImportantDatesSection({ client }: ImportantDatesSectionProps) {
                   value: annualDate.getTime(),
                 });
               }}
-              className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
-              <option value="">Select Month</option>
-              {months.map((month, index) => (
-                <option key={month} value={index + 1}>
-                  {month}
-                </option>
-              ))}
-            </select>
-            <select
-              value={annualDay}
-              onChange={(e) => {
-                const newDay = parseInt(e.target.value);
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Month" />
+              </SelectTrigger>
+              <SelectContent>
+                {months.map((month, index) => (
+                  <SelectItem key={month} value={(index + 1).toString()}>
+                    {month}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={annualDay.toString()}
+              onValueChange={(value) => {
+                const newDay = parseInt(value);
                 setAnnualDay(newDay);
                 const annualDate = new Date(new Date().getFullYear(), annualMonth - 1, newDay);
                 updateContact({
@@ -80,20 +88,23 @@ export function ImportantDatesSection({ client }: ImportantDatesSectionProps) {
                   value: annualDate.getTime(),
                 });
               }}
-              className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
-              <option value="">Select Day</option>
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                <option key={day} value={day}>
-                  {day}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Day" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                  <SelectItem key={day} value={day.toString()}>
+                    {day}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         <QuarterlyReviewsSection client={client} />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 } 

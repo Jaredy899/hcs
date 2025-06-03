@@ -3,6 +3,11 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Edit, Save, X } from "lucide-react";
 
 interface ContactInformationSectionProps {
   client: {
@@ -65,90 +70,102 @@ export function ContactInformationSection({ client }: ContactInformationSectionP
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 lg:p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-semibold text-gray-900 dark:text-gray-100">Contact Information</h3>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 pt-3">
+        <CardTitle className="text-sm font-semibold">Contact Information</CardTitle>
         {!isEditingContact ? (
-          <button
+          <Button
             onClick={() => setIsEditingContact(true)}
-            className="text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 transition-colors"
+            variant="outline"
+            size="sm"
+            className="gap-1 h-6 px-2 text-xs"
           >
+            <Edit className="h-3 w-3" />
             Edit
-          </button>
+          </Button>
         ) : (
-          <div className="flex gap-2">
-            <button
+          <div className="flex gap-1">
+            <Button
               onClick={handleSaveContact}
-              className="text-sm bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 transition-colors"
+              size="sm"
+              className="gap-1 h-6 px-2 text-xs"
             >
+              <Save className="h-3 w-3" />
               Save
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleCancelEdit}
-              className="text-sm bg-gray-600 text-white px-3 py-1.5 rounded-md hover:bg-gray-700 transition-colors"
+              variant="outline"
+              size="sm"
+              className="gap-1 h-6 px-2 text-xs"
             >
+              <X className="h-3 w-3" />
               Cancel
-            </button>
+            </Button>
           </div>
         )}
-      </div>
-      <div className="space-y-3">
+      </CardHeader>
+      <CardContent className="space-y-2 px-3 pb-3">
         {isEditingContact ? (
           <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-              <input
+            <div className="space-y-1">
+              <Label htmlFor="edit-name" className="text-xs">Name</Label>
+              <Input
+                id="edit-name"
                 type="text"
                 value={editedContact.name}
                 onChange={(e) => setEditedContact(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="h-7 text-xs"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-              <input
+            <div className="space-y-1">
+              <Label htmlFor="edit-phone" className="text-xs">Phone Number</Label>
+              <Input
+                id="edit-phone"
                 type="tel"
                 value={editedContact.phoneNumber}
                 onChange={(e) => setEditedContact(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="h-7 text-xs"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Insurance</label>
-              <input
+            <div className="space-y-1">
+              <Label htmlFor="edit-insurance" className="text-xs">Insurance</Label>
+              <Input
+                id="edit-insurance"
                 type="text"
                 value={editedContact.insurance}
                 onChange={(e) => setEditedContact(prev => ({ ...prev, insurance: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="h-7 text-xs"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client ID</label>
-              <input
+            <div className="space-y-1">
+              <Label htmlFor="edit-client-id" className="text-xs">Client ID</Label>
+              <Input
+                id="edit-client-id"
                 type="text"
                 value={editedContact.clientId}
                 onChange={(e) => setEditedContact(prev => ({ ...prev, clientId: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="h-7 text-xs"
               />
             </div>
           </>
         ) : (
           <>
             <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone</p>
-              <p className="text-gray-900 dark:text-gray-100">{client.phoneNumber || "Not provided"}</p>
+              <p className="text-xs font-medium text-muted-foreground">Phone</p>
+              <p className="text-sm text-foreground">{client.phoneNumber || "Not provided"}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Insurance</p>
-              <p className="text-gray-900 dark:text-gray-100">{client.insurance || "Not provided"}</p>
+              <p className="text-xs font-medium text-muted-foreground">Insurance</p>
+              <p className="text-sm text-foreground">{client.insurance || "Not provided"}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Client ID</p>
-              <p className="text-gray-900 dark:text-gray-100">{client.clientId || "Not provided"}</p>
+              <p className="text-xs font-medium text-muted-foreground">Client ID</p>
+              <p className="text-sm text-foreground">{client.clientId || "Not provided"}</p>
             </div>
           </>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 } 
