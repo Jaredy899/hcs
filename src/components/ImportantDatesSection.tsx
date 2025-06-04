@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Id } from "../../convex/_generated/dataModel";
 import { QuarterlyReviewsSection } from "./QuarterlyReviewsSection";
+import { getQuarterlyReviewDates } from "./utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -32,9 +33,6 @@ export function ImportantDatesSection({ client, pendingChanges }: ImportantDates
   const [annualMonth, setAnnualMonth] = useState(() => {
     return new Date(annualAssessmentValue).getMonth() + 1;
   });
-  const [annualDay, setAnnualDay] = useState(() => {
-    return new Date(annualAssessmentValue).getDate();
-  });
 
   // Update local state when the pending value changes
   useEffect(() => {
@@ -42,19 +40,21 @@ export function ImportantDatesSection({ client, pendingChanges }: ImportantDates
     if (currentValue) {
       const date = new Date(currentValue);
       setAnnualMonth(date.getMonth() + 1);
-      setAnnualDay(date.getDate());
     }
   }, [annualAssessmentValue]);
 
-  const handleAnnualDateChange = (month?: number, day?: number) => {
-    const newMonth = month !== undefined ? month : annualMonth;
-    const newDay = day !== undefined ? day : annualDay;
-    
-    const annualDate = new Date(new Date().getFullYear(), newMonth - 1, newDay);
+  const handleAnnualDateChange = (month: number) => {
+    // Always set to the 1st of the month
+    const annualDate = new Date(new Date().getFullYear(), month - 1, 1);
     pendingChanges.addDateChange(client._id, "nextAnnualAssessment", annualDate.getTime());
+    setAnnualMonth(month);
     
-    if (month !== undefined) setAnnualMonth(month);
-    if (day !== undefined) setAnnualDay(day);
+    // Automatically recalculate and update quarterly review dates
+    const qrDates = getQuarterlyReviewDates(annualDate.getTime());
+    qrDates.forEach((qr, index) => {
+      const qrDateField = `qr${index + 1}Date` as "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
+      pendingChanges.addDateChange(client._id, qrDateField, qr.date.getTime());
+    });
   };
 
   const months = [
@@ -70,44 +70,24 @@ export function ImportantDatesSection({ client, pendingChanges }: ImportantDates
       <CardContent className="space-y-4 px-4 pb-3">
         <div className="space-y-2">
           <Label className="text-sm">Annual Assessment Date</Label>
-          <div className="flex gap-2">
-            <Select
-              value={annualMonth.toString()}
-              onValueChange={(value) => {
-                const newMonth = parseInt(value);
-                handleAnnualDateChange(newMonth, undefined);
-              }}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Month" />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month, index) => (
-                  <SelectItem key={month} value={(index + 1).toString()}>
-                    {month}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={annualDay.toString()}
-              onValueChange={(value) => {
-                const newDay = parseInt(value);
-                handleAnnualDateChange(undefined, newDay);
-              }}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Day" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                  <SelectItem key={day} value={day.toString()}>
-                    {day}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select
+            value={annualMonth.toString()}
+            onValueChange={(value) => {
+              const newMonth = parseInt(value);
+              handleAnnualDateChange(newMonth);
+            }}
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Month" />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((month, index) => (
+                <SelectItem key={month} value={(index + 1).toString()}>
+                  {month}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <QuarterlyReviewsSection client={client} pendingChanges={pendingChanges} />
