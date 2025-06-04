@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import { getTimeBasedColor, getUpcomingDateColor } from "@/lib/dateColors";
 
 interface LastContactSectionProps {
   client: {
@@ -61,7 +62,7 @@ export function LastContactSection({ client, pendingChanges }: LastContactSectio
 
           <p className="text-sm text-muted-foreground">
             {lastContactValue
-              ? new Date(lastContactValue).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+              ? <span className={getTimeBasedColor(lastContactValue, 30, "text-green-600")}>{new Date(lastContactValue).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
               : "No contact recorded"}
           </p>
         </div>
@@ -91,12 +92,15 @@ export function LastContactSection({ client, pendingChanges }: LastContactSectio
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">
               {lastFaceToFaceValue
-                ? new Date(lastFaceToFaceValue).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                ? <span className={getTimeBasedColor(lastFaceToFaceValue, 90, "text-green-600")}>{new Date(lastFaceToFaceValue).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                 : "No face to face recorded"}
             </p>
             {lastFaceToFaceValue && (
               <p className="text-sm font-medium">
-                Next due: {new Date(lastFaceToFaceValue + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                <span className="text-muted-foreground">Next due: </span>
+                <span className={getUpcomingDateColor(new Date(lastFaceToFaceValue + (90 * 24 * 60 * 60 * 1000)), 15, "text-indigo-600")}>
+                  {new Date(lastFaceToFaceValue + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                </span>
               </p>
             )}
           </div>
