@@ -49,3 +49,24 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+export const update = mutation({
+  args: { id: v.id("notes"), text: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const userId = await getCurrentUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Get the note to verify ownership
+    const note = await ctx.db.get(args.id);
+    if (!note) throw new Error("Note not found");
+    
+    // Only the case manager who created the note can edit it
+    if (note.caseManagerId !== userId) {
+      throw new Error("Not authorized to edit this note");
+    }
+
+    await ctx.db.patch(args.id, { text: args.text });
+    return null;
+  },
+});
