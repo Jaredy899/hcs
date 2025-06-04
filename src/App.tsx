@@ -9,10 +9,22 @@ import { AddClientForm } from "./AddClientForm";
 import { Id } from "../convex/_generated/dataModel";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { Button } from "@/components/ui/button";
+import { SearchProvider } from "./hooks/useSearchContext";
+import { useGlobalHotkeys } from "./hooks/useGlobalHotkeys";
+import { HotkeysButton, HotkeysHelp } from "./components/HotkeysHelp";
 
 export default function App() {
+  return (
+    <SearchProvider>
+      <AppContent />
+    </SearchProvider>
+  );
+}
+
+function AppContent() {
   const [selectedClientId, setSelectedClientId] = useState<Id<"clients"> | null>(null);
   const [showAddClient, setShowAddClient] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const { signOut } = useClerk();
 
   return (
@@ -27,6 +39,7 @@ export default function App() {
           <h2 className="text-lg sm:text-xl font-semibold">HCS Case Management System</h2>
         </div>
         <div className="flex items-center gap-4 w-full sm:w-auto">
+          <HotkeysButton onClick={() => setShowHelp(true)} />
           <ThemeSwitcher />
           <Authenticated>
             <Button
@@ -60,9 +73,12 @@ export default function App() {
             setSelectedClientId={setSelectedClientId}
             showAddClient={showAddClient}
             setShowAddClient={setShowAddClient}
+            showHelp={showHelp}
+            setShowHelp={setShowHelp}
           />
         </div>
       </main>
+      <HotkeysHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
       <Toaster />
     </div>
   );
@@ -73,11 +89,15 @@ function Content({
   setSelectedClientId,
   showAddClient,
   setShowAddClient,
+  showHelp,
+  setShowHelp,
 }: {
   selectedClientId: Id<"clients"> | null;
   setSelectedClientId: (id: Id<"clients"> | null) => void;
   showAddClient: boolean;
   setShowAddClient: (show: boolean) => void;
+  showHelp: boolean;
+  setShowHelp: (show: boolean) => void;
 }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const createOrGetUser = useMutation(api.auth.createOrGetUser);
@@ -96,6 +116,38 @@ function Content({
   const handleCloseClient = () => {
     setSelectedClientId(null);
   };
+
+  // Global hotkeys implementation
+  useGlobalHotkeys({
+    onFocusSearch: () => {
+      // Focus search - for /
+      if (!selectedClientId && !showAddClient && isAuthenticated) {
+        const searchInput = document.getElementById('search') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+    },
+    onEscape: () => {
+      if (showHelp) {
+        setShowHelp(false);
+      } else if (showAddClient) {
+        setShowAddClient(false);
+      } else if (selectedClientId) {
+        handleCloseClient();
+      }
+    },
+    onAddClient: () => {
+      if (isAuthenticated && !selectedClientId && !showAddClient) {
+        setShowAddClient(true);
+      }
+    },
+    onShowHelp: () => {
+      setShowHelp(true);
+    },
+    enabled: isAuthenticated,
+  });
 
   // Show loading if auth is still loading or if currentUser is undefined (query is loading)
   if (isLoading || (isAuthenticated && currentUser === undefined)) {
