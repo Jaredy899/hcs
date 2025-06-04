@@ -11,13 +11,16 @@ import { ClipboardList } from "lucide-react";
 
 function getUpcomingDates(client: any) {
   const today = new Date();
-  const currentMonth = today.getMonth() + 1;
+  const currentMonth = today.getMonth() + 1; // 1-12
   
   // Check if annual assessment is due this month
   const annualDate = new Date(client.nextAnnualAssessment);
-  const annualMonth = annualDate.getMonth() + 1;
-  const isAnnualDue = annualMonth === currentMonth && !client.lastAnnualCompleted;
-  const isAnnualDueNextMonth = annualMonth === currentMonth + 1 && !client.lastAnnualCompleted;
+  const annualMonth = annualDate.getMonth() + 1; // 1-12
+  const isAnnualDue = annualMonth === currentMonth;
+  
+  // Simple logic: show red if annual assessment is next month
+  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+  const isAnnualDueNextMonth = annualMonth === nextMonth;
 
   // Get quarterly review dates
   const qrDates = getQuarterlyReviewDates(client.nextAnnualAssessment);
@@ -349,7 +352,7 @@ export function ClientList({
                     <TableCell className="text-center text-xs font-bold">
                       {upcomingDates.nextQRDate ? (
                         <div className="flex items-center justify-center gap-1">
-                          <span className={upcomingDates.isQRDue ? "text-destructive font-medium" : ""}>
+                          <span className={upcomingDates.isQRDue ? "text-destructive font-bold" : "font-bold"}>
                             {upcomingDates.nextQRDate.toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",
