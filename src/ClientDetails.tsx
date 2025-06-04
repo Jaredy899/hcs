@@ -24,16 +24,6 @@ export function ClientDetails({
   const archiveClient = useMutation(api.clients.archive);
   const pendingChanges = usePendingChanges();
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        handleClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   const handleClose = async () => {
     if (pendingChanges.hasPendingChanges) {
       try {
@@ -46,6 +36,16 @@ export function ClientDetails({
     }
     onClose();
   };
+
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        await handleClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleClose]);
 
   if (!client) return null;
 

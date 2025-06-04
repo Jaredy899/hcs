@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckSquare, ClipboardList } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 
 function getUpcomingDates(client: any) {
   const today = new Date();
@@ -193,7 +193,7 @@ export function ClientList({
     } else if (e.key === 'Escape') {
       setSearchTerm('');
       if (selectedClientId) {
-        onSelectClient(null as any); // Clear selection
+        onCloseClient();
       }
     }
   };
