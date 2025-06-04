@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { QuarterlyReviewsSection } from "./QuarterlyReviewsSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,8 +27,6 @@ interface ImportantDatesSectionProps {
 }
 
 export function ImportantDatesSection({ client, pendingChanges }: ImportantDatesSectionProps) {
-  const updateContact = useMutation(api.clients.updateContact);
-
   const annualAssessmentValue = pendingChanges.getDateState(client._id, "nextAnnualAssessment", client.nextAnnualAssessment) || client.nextAnnualAssessment;
 
   const [annualMonth, setAnnualMonth] = useState(() => {
