@@ -86,6 +86,44 @@ function getQuarterlyReviewDates(annualAssessmentDate: number) {
   return [q1, q2, q3, q4];
 }
 
+// Helper function to get color based on days since last contact/action
+function getTimeBasedColor(lastDate: number | undefined, maxDays: number, baseColor: string) {
+  if (!lastDate) return "text-gray-400";
+  
+  const today = new Date();
+  const daysSince = Math.floor((today.getTime() - lastDate) / (1000 * 60 * 60 * 24));
+  
+  if (daysSince >= maxDays) {
+    return "text-red-600 font-bold"; // Overdue
+  } else if (daysSince >= maxDays * 0.8) {
+    return "text-red-500 font-medium"; // 80-100% of time elapsed
+  } else if (daysSince >= maxDays * 0.6) {
+    return "text-orange-500 font-medium"; // 60-80% of time elapsed
+  } else if (daysSince >= maxDays * 0.4) {
+    return "text-yellow-600 font-medium"; // 40-60% of time elapsed
+  } else {
+    return `${baseColor} font-medium`; // Less than 40% of time elapsed
+  }
+}
+
+// Helper function to get color for upcoming dates
+function getUpcomingDateColor(futureDate: Date, daysThreshold: number, baseColor: string) {
+  const today = new Date();
+  const daysUntil = Math.ceil((futureDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (daysUntil <= 0) {
+    return "text-red-600 font-bold"; // Overdue
+  } else if (daysUntil <= daysThreshold * 0.2) {
+    return "text-red-500 font-medium"; // Within 20% of threshold
+  } else if (daysUntil <= daysThreshold * 0.4) {
+    return "text-orange-500 font-medium"; // Within 40% of threshold
+  } else if (daysUntil <= daysThreshold * 0.6) {
+    return "text-yellow-600 font-medium"; // Within 60% of threshold
+  } else {
+    return `${baseColor} font-medium`; // More than 60% of time remaining
+  }
+}
+
 export function ClientList({
   selectedClientId,
   onSelectClient,
@@ -263,12 +301,12 @@ export function ClientList({
                 >
                   Consumer{renderSortIndicator('name')}
                 </TableHead>
-                <TableHead 
+                {/* <TableHead 
                   className="text-center cursor-pointer hover:bg-muted/50"
                   onClick={() => handleColumnSort('annualAssessment')}
                 >
                   Annual Assessment{renderSortIndicator('annualAssessment')}
-                </TableHead>
+                </TableHead> */}
                 <TableHead 
                   className="text-center cursor-pointer hover:bg-muted/50"
                   onClick={() => handleColumnSort('nextQR')}
@@ -287,12 +325,12 @@ export function ClientList({
                 >
                   Last Face to Face{renderSortIndicator('lastF2F')}
                 </TableHead>
-                <TableHead 
+                {/* <TableHead 
                   className="text-center cursor-pointer hover:bg-muted/50"
                   onClick={() => handleColumnSort('nextF2F')}
                 >
                   Next Face to Face{renderSortIndicator('nextF2F')}
-                </TableHead>
+                </TableHead> */}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -336,7 +374,7 @@ export function ClientList({
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-center text-xs text-muted-foreground">
+                    {/* <TableCell className="text-center text-xs text-muted-foreground">
                       {client.nextAnnualAssessment
                         ? (
                           <span className={`${upcomingDates.isAnnualDueNextMonth ? "text-red-600 font-bold" : "text-purple-600 font-medium"}`}>
@@ -348,7 +386,7 @@ export function ClientList({
                           </span>
                         )
                         : <span className="text-gray-400">Not set</span>}
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell className="text-center text-xs">
                       {upcomingDates.nextQRDate ? (
                         <div className="flex items-center justify-center gap-1">
@@ -368,15 +406,15 @@ export function ClientList({
                     </TableCell>
                     <TableCell className="text-center text-xs">
                       {client.lastContactDate
-                        ? <span className="text-green-600 font-medium">{new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                        ? <span className={getTimeBasedColor(client.lastContactDate, 30, "text-green-600")}>{new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                         : <span className="text-gray-400">No contact recorded</span>}
                     </TableCell>
                     <TableCell className="text-center text-xs">
                       {client.lastFaceToFaceDate
-                        ? <span className="text-teal-600 font-medium">{new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                        ? <span className={getTimeBasedColor(client.lastFaceToFaceDate, 90, "text-teal-600")}>{new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                         : <span className="text-gray-400">No face to face recorded</span>}
                     </TableCell>
-                    <TableCell className="text-center text-xs">
+                    {/* <TableCell className="text-center text-xs">
                       {client.lastFaceToFaceDate
                         ? (() => {
                             const nextFaceToFaceDate = new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000));
@@ -385,7 +423,7 @@ export function ClientList({
                             const isDueSoon = daysUntilNext <= 15;
                             
                             return (
-                              <span className={`${isDueSoon ? "text-red-600 font-bold" : "text-indigo-600 font-medium"}`}>
+                              <span className={getUpcomingDateColor(nextFaceToFaceDate, 15, "text-indigo-600")}>
                                 {nextFaceToFaceDate.toLocaleDateString(undefined, {
                                   month: "short",
                                   day: "numeric",
@@ -394,7 +432,7 @@ export function ClientList({
                             );
                           })()
                         : <span className="text-gray-400">Not applicable</span>}
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 );
               })}
