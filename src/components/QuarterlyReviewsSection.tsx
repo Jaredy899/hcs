@@ -30,8 +30,6 @@ interface QuarterlyReviewsSectionProps {
 }
 
 export function QuarterlyReviewsSection({ client, pendingChanges }: QuarterlyReviewsSectionProps) {
-  const updateContact = useMutation(api.clients.updateContact);
-
   // Add local state for quarterly review dates (only month for each quarter)
   const [qrMonths, setQrMonths] = useState(() =>
     [0, 1, 2, 3].map((i) => {

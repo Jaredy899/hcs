@@ -1,5 +1,5 @@
 import { SignInButton, UserButton, useClerk } from "@clerk/clerk-react";
-import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation, useConvexAuth } from "convex/react";
+import { Authenticated, Unauthenticated, useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Toaster } from "sonner";
 import { ClientList } from "./ClientList";
