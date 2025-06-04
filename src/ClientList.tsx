@@ -339,7 +339,7 @@ export function ClientList({
                     <TableCell className="text-center text-xs text-muted-foreground">
                       {client.nextAnnualAssessment
                         ? (
-                          <span className={upcomingDates.isAnnualDueNextMonth ? "text-destructive font-medium" : ""}>
+                          <span className={`${upcomingDates.isAnnualDueNextMonth ? "text-red-600 font-bold" : "text-purple-600 font-medium"}`}>
                             {new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",
@@ -347,36 +347,36 @@ export function ClientList({
                             })}
                           </span>
                         )
-                        : "Not set"}
+                        : <span className="text-gray-400">Not set</span>}
                     </TableCell>
-                    <TableCell className="text-center text-xs font-bold">
+                    <TableCell className="text-center text-xs">
                       {upcomingDates.nextQRDate ? (
                         <div className="flex items-center justify-center gap-1">
-                          <span className={upcomingDates.isQRDue ? "text-destructive font-bold" : "font-bold"}>
+                          <span className={`${upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-blue-600 font-medium"}`}>
                             {upcomingDates.nextQRDate.toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",
                             })}
                           </span>
-                          <span className="text-muted-foreground text-xs">
+                          <span className="text-blue-400 text-xs">
                             (Q{upcomingDates.nextQRIndex + 1})
                           </span>
                         </div>
                       ) : (
-                        "Not set"
+                        <span className="text-gray-400">Not set</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center text-xs text-muted-foreground">
+                    <TableCell className="text-center text-xs">
                       {client.lastContactDate
-                        ? new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                        : "No contact recorded"}
+                        ? <span className="text-green-600 font-medium">{new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                        : <span className="text-gray-400">No contact recorded</span>}
                     </TableCell>
-                    <TableCell className="text-center text-xs text-muted-foreground">
+                    <TableCell className="text-center text-xs">
                       {client.lastFaceToFaceDate
-                        ? new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                        : "No face to face recorded"}
+                        ? <span className="text-teal-600 font-medium">{new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                        : <span className="text-gray-400">No face to face recorded</span>}
                     </TableCell>
-                    <TableCell className="text-center text-xs font-bold">
+                    <TableCell className="text-center text-xs">
                       {client.lastFaceToFaceDate
                         ? (() => {
                             const nextFaceToFaceDate = new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000));
@@ -385,7 +385,7 @@ export function ClientList({
                             const isDueSoon = daysUntilNext <= 15;
                             
                             return (
-                              <span className={isDueSoon ? "text-destructive" : ""}>
+                              <span className={`${isDueSoon ? "text-red-600 font-bold" : "text-indigo-600 font-medium"}`}>
                                 {nextFaceToFaceDate.toLocaleDateString(undefined, {
                                   month: "short",
                                   day: "numeric",
@@ -393,7 +393,7 @@ export function ClientList({
                               </span>
                             );
                           })()
-                        : "Not applicable"}
+                        : <span className="text-gray-400">Not applicable</span>}
                     </TableCell>
                   </TableRow>
                 );
