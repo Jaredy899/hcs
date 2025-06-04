@@ -130,19 +130,19 @@ export function ImportClientsForm({ onClose }: { onClose: () => void }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-background rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Import Clients from CSV</h2>
+            <h2 className="text-xl font-semibold">Import Clients from CSV</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+              className="text-muted-foreground hover:text-foreground"
             >
               <span className="sr-only">Close</span>
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -152,10 +152,10 @@ export function ImportClientsForm({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
+            <div className="border-2 border-dashed border-border rounded-lg p-6">
               <div className="text-center">
                 <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
+                  className="mx-auto h-12 w-12 text-muted-foreground"
                   stroke="currentColor"
                   fill="none"
                   viewBox="0 0 48 48"
@@ -168,10 +168,10 @@ export function ImportClientsForm({ onClose }: { onClose: () => void }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <div className="mt-4 flex text-sm text-gray-600 dark:text-gray-400">
+                <div className="mt-4 flex text-sm text-muted-foreground">
                   <label
                     htmlFor="file-upload"
-                    className="relative cursor-pointer rounded-md bg-white dark:bg-gray-800 font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2"
+                    className="relative cursor-pointer rounded-md bg-background font-medium text-primary hover:text-primary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
                   >
                     <span>Upload a CSV file</span>
                     <input
@@ -185,33 +185,33 @@ export function ImportClientsForm({ onClose }: { onClose: () => void }) {
                   </label>
                   <p className="pl-1">or drag and drop</p>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   CSV file with columns: Id, First Name, Last Name, Preferred Name, Client/Record ID, Cell Phone, Plan End Date, Insurance/Authorization ID
                 </p>
               </div>
             </div>
 
             {error && (
-              <div className="rounded-md bg-red-50 dark:bg-red-900/50 p-4">
+              <div className="rounded-md bg-destructive/15 p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="h-5 w-5 text-destructive" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
-                    <div className="mt-2 text-sm text-red-700 dark:text-red-300">{error}</div>
+                    <h3 className="text-sm font-medium text-destructive">Error</h3>
+                    <div className="mt-2 text-sm text-destructive/80">{error}</div>
                   </div>
                 </div>
               </div>
             )}
 
             {success && (
-              <div className="rounded-md bg-green-50 dark:bg-green-900/50 p-4">
+              <div className="rounded-md bg-green-500/15 p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   </div>
