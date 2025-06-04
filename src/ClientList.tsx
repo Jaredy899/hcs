@@ -323,13 +323,13 @@ export function ClientList({
                         <div className="flex gap-1 mt-1 justify-center">
                           <Badge 
                             variant={client.firstContactCompleted ? "secondary" : "destructive"} 
-                            className={`text-xs ${client.firstContactCompleted ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}`}
+                            className={`text-[10px] px-1.5 py-0.5 h-4 ${client.firstContactCompleted ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}`}
                           >
                             {client.firstContactCompleted ? "1st Contact ✓" : "1st Contact ✗"}
                           </Badge>
                           <Badge 
                             variant={client.secondContactCompleted ? "secondary" : "destructive"} 
-                            className={`text-xs ${client.secondContactCompleted ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}`}
+                            className={`text-[10px] px-1.5 py-0.5 h-4 ${client.secondContactCompleted ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}`}
                           >
                             {client.secondContactCompleted ? "2nd Contact ✓" : "2nd Contact ✗"}
                           </Badge>
