@@ -26,7 +26,10 @@ function ConvexProviderWithClerk({ children }: { children: React.ReactNode }) {
           return null;
         }
         
-        const token = await auth.getToken({ template: "convex" });
+        const token = await auth.getToken({ 
+          template: "convex",
+          skipCache: forceRefreshToken 
+        });
         return token;
       } catch (error) {
         console.error("Error fetching access token:", error);
