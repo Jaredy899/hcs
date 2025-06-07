@@ -78,7 +78,7 @@ export function ImportClientsForm({ onClose }: { onClose: () => void }) {
             cellPhone,
             planProgram,
             planEndDate,
-            primaryProvider,
+            _primaryProvider,
             authorizationId
           ] = fields;
 
