@@ -304,7 +304,10 @@ export const bulkImport = mutation({
     // Deduplicate clients by clientId, keeping only case management relevant entries
     const clientMap = new Map<string, typeof args.clients[0]>();
     
+    console.log(`Starting to process ${args.clients.length} clients from CSV`);
+    
     for (const client of args.clients) {
+      console.log(`Processing client ${client.clientId}: ${client.firstName} ${client.lastName}, program: "${client.planProgram}"`);
       const existingEntry = clientMap.get(client.clientId);
       
       if (!existingEntry) {
@@ -358,6 +361,12 @@ export const bulkImport = mutation({
     }
 
     console.log(`Processing ${clientMap.size} unique case management clients after deduplication from ${args.clients.length} total entries`);
+    
+    // Log which clients made it through the filter
+    console.log('Clients that passed filtering:');
+    for (const [clientId, client] of clientMap) {
+      console.log(`- ${clientId}: ${client.firstName} ${client.lastName} (${client.planProgram || 'NO PROGRAM'})`);
+    }
 
     const results = [];
     for (const [clientId, client] of clientMap) {
