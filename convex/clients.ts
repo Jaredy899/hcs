@@ -283,22 +283,20 @@ export const bulkImport = mutation({
       "NAV CM": 1      // Lowest priority
     };
 
-    // Function to check if a program is case management or empty/null
+    // Function to check if a program is case management
     const isCaseManagement = (program: string | undefined): boolean => {
-      // Allow clients with no program (empty, null, undefined, or just whitespace)
       if (!program || typeof program !== 'string') {
-        return true;
+        return false;
       }
       const trimmedProgram = program.trim();
       if (trimmedProgram === "" || trimmedProgram === "null" || trimmedProgram === "undefined") {
-        return true;
+        return false;
       }
       return Object.keys(caseManagementPrograms).includes(trimmedProgram);
     };
 
     // Function to get program priority
     const getProgramPriority = (program: string | undefined): number => {
-      // Clients with no program get priority 0 (lowest, but still valid)
       if (!program || typeof program !== 'string') return 0;
       const trimmedProgram = program.trim();
       if (trimmedProgram === "" || trimmedProgram === "null" || trimmedProgram === "undefined") return 0;
@@ -308,32 +306,24 @@ export const bulkImport = mutation({
     // Deduplicate clients by clientId, keeping only case management relevant entries
     const clientMap = new Map<string, typeof args.clients[0]>();
     
-    console.log(`Starting to process ${args.clients.length} clients from CSV`);
-    
     for (const client of args.clients) {
-      console.log(`Processing client ${client.clientId}: ${client.firstName} ${client.lastName}, program: "${client.planProgram}" (type: ${typeof client.planProgram})`);
       const existingEntry = clientMap.get(client.clientId);
       
       if (!existingEntry) {
         // First entry for this clientId - only keep if it's case management
         if (isCaseManagement(client.planProgram)) {
           clientMap.set(client.clientId, client);
-          console.log(`Added client ${client.clientId} (${client.firstName} ${client.lastName}) with program: "${client.planProgram}"`);
-        } else {
-          console.log(`Skipped client ${client.clientId} (${client.firstName} ${client.lastName}) with program: "${client.planProgram}" - not case management`);
         }
       } else {
         // Duplicate clientId found - apply case management filtering and priority rules
         const currentPriority = getProgramPriority(client.planProgram);
         const existingPriority = getProgramPriority(existingEntry.planProgram);
         
-        // Only consider this entry if it's case management or has no program
+        // Only consider this entry if it's case management
         if (isCaseManagement(client.planProgram)) {
-          console.log(`Duplicate client ${client.clientId}: comparing "${client.planProgram}" (priority ${currentPriority}) vs "${existingEntry.planProgram}" (priority ${existingPriority})`);
           // If current entry has higher priority, replace the existing one
           if (currentPriority > existingPriority) {
             clientMap.set(client.clientId, client);
-            console.log(`Replaced with higher priority program: "${client.planProgram}"`);
           } 
           // If same priority, compare end dates and use the later one
           else if (currentPriority === existingPriority) {
@@ -344,41 +334,20 @@ export const bulkImport = mutation({
               // If current date is later (further in the future), use this entry
               if (currentDate > existingDate) {
                 clientMap.set(client.clientId, client);
-                console.log(`Replaced with later date: ${client.annualAssessmentDate} vs ${existingEntry.annualAssessmentDate}`);
-              } else {
-                console.log(`Kept existing entry with earlier/same date: ${existingEntry.annualAssessmentDate} vs ${client.annualAssessmentDate}`);
               }
               // If existing date is later or same, keep the existing entry
             } catch (error) {
               console.warn(`Error parsing dates for client ${client.clientId}: current=${client.annualAssessmentDate}, existing=${existingEntry.annualAssessmentDate}`);
               // If date parsing fails, keep the existing entry
             }
-          } else {
-            console.log(`Kept existing entry with higher priority: "${existingEntry.planProgram}"`);
           }
           // If current priority is lower, keep the existing entry
-        } else {
-          console.log(`Skipped duplicate client ${client.clientId} with non-case management program: "${client.planProgram}"`);
         }
-        // If current entry is not case management and not empty program, skip it
+        // If current entry is not case management, skip it
       }
     }
 
     console.log(`Processing ${clientMap.size} unique case management clients after deduplication from ${args.clients.length} total entries`);
-    
-    // Log which clients made it through the filter
-    console.log('Clients that passed filtering:');
-    for (const [clientId, client] of clientMap) {
-      console.log(`- ${clientId}: ${client.firstName} ${client.lastName} (${client.planProgram || 'NO PROGRAM'})`);
-    }
-    
-    // Log which clients were filtered out
-    const processedClientIds = new Set(clientMap.keys());
-    const filteredOutClients = args.clients.filter(client => !processedClientIds.has(client.clientId));
-    console.log(`Filtered out ${filteredOutClients.length} clients:`);
-    for (const client of filteredOutClients) {
-      console.log(`- FILTERED: ${client.clientId}: ${client.firstName} ${client.lastName} (program: "${client.planProgram}")`);
-    }
 
     const results = [];
     for (const [clientId, client] of clientMap) {
