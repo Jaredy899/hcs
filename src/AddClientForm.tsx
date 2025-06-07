@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { ImportClientsForm } from "./ImportClientsForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
+
+// Lazy load the import form
+const ImportClientsForm = lazy(() => import("./ImportClientsForm"));
 
 function getQuarterlyReviewDates(annualAssessmentDate: number) {
   const date = new Date(annualAssessmentDate);
@@ -36,7 +38,7 @@ function getQuarterlyReviewDates(annualAssessmentDate: number) {
   ];
 }
 
-export function AddClientForm({ onClose }: { onClose: () => void }) {
+export default function AddClientForm({ onClose }: { onClose: () => void }) {
   const addClient = useMutation(api.clients.add);
   const [showImportForm, setShowImportForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -71,7 +73,20 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
   };
 
   if (showImportForm) {
-    return <ImportClientsForm onClose={() => setShowImportForm(false)} />;
+    return (
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-lg shadow-xl p-8">
+            <div className="flex justify-center items-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <span className="ml-2">Loading...</span>
+            </div>
+          </div>
+        </div>
+      }>
+        <ImportClientsForm onClose={() => setShowImportForm(false)} />
+      </Suspense>
+    );
   }
 
   return (

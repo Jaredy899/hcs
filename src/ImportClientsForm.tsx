@@ -38,7 +38,7 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
-export function ImportClientsForm({ onClose }: { onClose: () => void }) {
+export default function ImportClientsForm({ onClose }: { onClose: () => void }) {
   const bulkImport = useMutation(api.clients.bulkImport);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
