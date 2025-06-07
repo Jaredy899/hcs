@@ -285,16 +285,18 @@ export const bulkImport = mutation({
 
     // Function to check if a program is case management or empty/null
     const isCaseManagement = (program: string | undefined): boolean => {
-      // Allow clients with no program (empty, null, or undefined)
-      if (!program || program.trim() === "") return true;
-      return Object.keys(caseManagementPrograms).includes(program.trim());
+      // Allow clients with no program (empty, null, undefined, or just whitespace)
+      if (!program || typeof program !== 'string' || program.trim() === "") return true;
+      const trimmedProgram = program.trim();
+      return Object.keys(caseManagementPrograms).includes(trimmedProgram);
     };
 
     // Function to get program priority
     const getProgramPriority = (program: string | undefined): number => {
       // Clients with no program get priority 0 (lowest, but still valid)
-      if (!program || program.trim() === "") return 0;
-      return caseManagementPrograms[program.trim() as keyof typeof caseManagementPrograms] || 0;
+      if (!program || typeof program !== 'string' || program.trim() === "") return 0;
+      const trimmedProgram = program.trim();
+      return caseManagementPrograms[trimmedProgram as keyof typeof caseManagementPrograms] || 0;
     };
 
     // Deduplicate clients by clientId, keeping only case management relevant entries
@@ -302,6 +304,9 @@ export const bulkImport = mutation({
     
     for (const client of args.clients) {
       const existingEntry = clientMap.get(client.clientId);
+      
+      // Debug logging for program values
+      console.log(`Client ${client.clientId} (${client.firstName} ${client.lastName}): planProgram = "${client.planProgram}" (type: ${typeof client.planProgram}), isCaseManagement: ${isCaseManagement(client.planProgram)}`);
       
       if (!existingEntry) {
         // First entry for this clientId - only keep if it's case management
