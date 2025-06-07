@@ -286,10 +286,18 @@ export const bulkImport = mutation({
     // Function to check if a program is case management or empty/null
     const isCaseManagement = (program: string | undefined): boolean => {
       // Allow clients with no program (empty, null, undefined, or just whitespace)
-      if (!program || typeof program !== 'string') return true;
+      if (!program || typeof program !== 'string') {
+        console.log(`Program is falsy or not string: ${program} (type: ${typeof program})`);
+        return true;
+      }
       const trimmedProgram = program.trim();
-      if (trimmedProgram === "" || trimmedProgram === "null" || trimmedProgram === "undefined") return true;
-      return Object.keys(caseManagementPrograms).includes(trimmedProgram);
+      if (trimmedProgram === "" || trimmedProgram === "null" || trimmedProgram === "undefined") {
+        console.log(`Program is empty after trim: "${program}" -> "${trimmedProgram}"`);
+        return true;
+      }
+      const isValid = Object.keys(caseManagementPrograms).includes(trimmedProgram);
+      console.log(`Program "${trimmedProgram}" is case management: ${isValid}`);
+      return isValid;
     };
 
     // Function to get program priority
@@ -307,7 +315,7 @@ export const bulkImport = mutation({
     console.log(`Starting to process ${args.clients.length} clients from CSV`);
     
     for (const client of args.clients) {
-      console.log(`Processing client ${client.clientId}: ${client.firstName} ${client.lastName}, program: "${client.planProgram}"`);
+      console.log(`Processing client ${client.clientId}: ${client.firstName} ${client.lastName}, program: "${client.planProgram}" (type: ${typeof client.planProgram})`);
       const existingEntry = clientMap.get(client.clientId);
       
       if (!existingEntry) {
