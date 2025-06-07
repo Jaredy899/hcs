@@ -283,15 +283,17 @@ export const bulkImport = mutation({
       "NAV CM": 1      // Lowest priority
     };
 
-    // Function to check if a program is case management
+    // Function to check if a program is case management or empty/null
     const isCaseManagement = (program: string | undefined): boolean => {
-      if (!program) return false;
+      // Allow clients with no program (empty, null, or undefined)
+      if (!program || program.trim() === "") return true;
       return Object.keys(caseManagementPrograms).includes(program.trim());
     };
 
     // Function to get program priority
     const getProgramPriority = (program: string | undefined): number => {
-      if (!program) return 0;
+      // Clients with no program get priority 0 (lowest, but still valid)
+      if (!program || program.trim() === "") return 0;
       return caseManagementPrograms[program.trim() as keyof typeof caseManagementPrograms] || 0;
     };
 
@@ -311,8 +313,8 @@ export const bulkImport = mutation({
         const currentPriority = getProgramPriority(client.planProgram);
         const existingPriority = getProgramPriority(existingEntry.planProgram);
         
-        // Only consider this entry if it's case management
-        if (currentPriority > 0) {
+        // Only consider this entry if it's case management or has no program
+        if (isCaseManagement(client.planProgram)) {
           // If current entry has higher priority, replace the existing one
           if (currentPriority > existingPriority) {
             clientMap.set(client.clientId, client);
@@ -335,7 +337,7 @@ export const bulkImport = mutation({
           }
           // If current priority is lower, keep the existing entry
         }
-        // If current entry is not case management, skip it
+        // If current entry is not case management and not empty program, skip it
       }
     }
 
@@ -349,18 +351,28 @@ export const bulkImport = mutation({
         .withIndex("by_client_id", (q) => q.eq("clientId", client.clientId))
         .first();
 
+      // Parse the annual assessment date from MM/DD/YYYY format
+      const [month, day, year] = client.annualAssessmentDate.split('/').map(Number);
+      const annualAssessmentDate = new Date(Date.UTC(year, month - 1, 1, 12, 0, 0)).getTime();
+
       let clientDbId;
       if (existingClient) {
         clientDbId = existingClient._id;
-        console.log(`Found existing client: ${client.clientId} (${client.planProgram})`);
-      } else {
-        // Parse the annual assessment date from MM/DD/YYYY format
-        const [month, day, year] = client.annualAssessmentDate.split('/').map(Number);
-        console.log('Parsed date:', { month, day, year, original: client.annualAssessmentDate });
         
-        // Set the date to the first of the month at noon UTC to avoid timezone issues
-        // Note: JavaScript months are 0-based, so we subtract 1 from the month
-        const annualAssessmentDate = new Date(Date.UTC(year, month - 1, 1, 12, 0, 0)).getTime();
+        // Update existing client with new information from CSV
+        const updatedName = client.preferredName 
+          ? `${client.firstName} (${client.preferredName}) ${client.lastName}`
+          : `${client.firstName} ${client.lastName}`;
+        
+        await ctx.db.patch(clientDbId, {
+          name: updatedName,
+          phoneNumber: client.phoneNumber,
+          insurance: client.insurance,
+          nextAnnualAssessment: annualAssessmentDate,
+        });
+        console.log(`Updated existing client: ${client.clientId} (${client.planProgram})`);
+      } else {
+        console.log('Parsed date:', { month, day, year, original: client.annualAssessmentDate });
         console.log('Created date:', new Date(annualAssessmentDate).toLocaleDateString());
         
         // Create the client record
@@ -482,17 +494,27 @@ export const bulkImportSimple = mutation({
         .withIndex("by_client_id", (q) => q.eq("clientId", client.clientId))
         .first();
 
+      // Parse the annual assessment date from MM/DD/YYYY format
+      const [month, day, year] = client.annualAssessmentDate.split('/').map(Number);
+      const annualAssessmentDate = new Date(Date.UTC(year, month - 1, 1, 12, 0, 0)).getTime();
+
       let clientDbId;
       if (existingClient) {
         clientDbId = existingClient._id;
-        console.log(`Found existing client: ${client.clientId}`);
+        
+        // Update existing client with new information from CSV
+        const updatedName = client.preferredName 
+          ? `${client.firstName} (${client.preferredName}) ${client.lastName}`
+          : `${client.firstName} ${client.lastName}`;
+        
+        await ctx.db.patch(clientDbId, {
+          name: updatedName,
+          phoneNumber: client.phoneNumber,
+          insurance: client.insurance,
+          nextAnnualAssessment: annualAssessmentDate,
+        });
+        console.log(`Updated existing client: ${client.clientId}`);
       } else {
-        // Parse the annual assessment date from MM/DD/YYYY format
-        const [month, day, year] = client.annualAssessmentDate.split('/').map(Number);
-        
-        // Set the date to the first of the month at noon UTC to avoid timezone issues
-        const annualAssessmentDate = new Date(Date.UTC(year, month - 1, 1, 12, 0, 0)).getTime();
-        
         // Create the client record
         clientDbId = await ctx.db.insert("clients", {
           name: client.preferredName 
