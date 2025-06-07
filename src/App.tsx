@@ -3,15 +3,29 @@ import { Authenticated, Unauthenticated, useQuery, useMutation, useConvexAuth } 
 import { api } from "../convex/_generated/api";
 import { Toaster } from "sonner";
 import { ClientList } from "./ClientList";
-import { useState, useEffect } from "react";
-import { ClientDetails } from "./ClientDetails";
-import { AddClientForm } from "./AddClientForm";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { Button } from "@/components/ui/button";
 import { SearchProvider } from "./hooks/useSearchContext";
 import { useGlobalHotkeys } from "./hooks/useGlobalHotkeys";
-import { HotkeysButton, HotkeysHelp } from "./components/HotkeysHelp";
+// Lazy load heavy components to reduce initial bundle size
+const ClientDetails = lazy(() => import("./ClientDetails").then(module => ({ default: module.ClientDetails })));
+const AddClientForm = lazy(() => import("./AddClientForm").then(module => ({ default: module.AddClientForm })));
+const HotkeysHelp = lazy(() => import("./components/HotkeysHelp").then(module => ({ default: module.HotkeysHelp })));
+const HotkeysButton = lazy(() => import("./components/HotkeysHelp").then(module => ({ default: module.HotkeysButton })));
+
+// Loading component for lazy-loaded components
+const ComponentLoader = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={
+    <div className="flex justify-center items-center py-8">
+      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+      <span className="ml-2 text-sm">Loading...</span>
+    </div>
+  }>
+    {children}
+  </Suspense>
+);
 
 export default function App() {
   return (
@@ -39,7 +53,9 @@ function AppContent() {
           <h2 className="text-lg sm:text-xl font-semibold">HCS Case Management System</h2>
         </div>
         <div className="flex items-center gap-4 w-full sm:w-auto">
-          <HotkeysButton onClick={() => setShowHelp(true)} />
+          <ComponentLoader>
+            <HotkeysButton onClick={() => setShowHelp(true)} />
+          </ComponentLoader>
           <ThemeSwitcher />
           <Authenticated>
             <Button
@@ -78,7 +94,11 @@ function AppContent() {
           />
         </div>
       </main>
-      <HotkeysHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
+      <ComponentLoader>
+        {showHelp && (
+          <HotkeysHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
+        )}
+      </ComponentLoader>
       <Toaster />
     </div>
   );
@@ -178,14 +198,18 @@ function Content({
 
       <Authenticated>
         {showAddClient && (
-          <AddClientForm onClose={() => setShowAddClient(false)} />
+          <ComponentLoader>
+            <AddClientForm onClose={() => setShowAddClient(false)} />
+          </ComponentLoader>
         )}
 
         {selectedClientId ? (
-          <ClientDetails
-            clientId={selectedClientId}
-            onClose={handleCloseClient}
-          />
+          <ComponentLoader>
+            <ClientDetails
+              clientId={selectedClientId}
+              onClose={handleCloseClient}
+            />
+          </ComponentLoader>
         ) : (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

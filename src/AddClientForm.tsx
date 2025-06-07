@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, Suspense, lazy } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { ImportClientsForm } from "./ImportClientsForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
+
+// Lazy load the ImportClientsForm since it's only used when user clicks Import CSV
+const ImportClientsForm = lazy(() => import("./ImportClientsForm").then(module => ({ default: module.ImportClientsForm })));
 
 function getQuarterlyReviewDates(annualAssessmentDate: number) {
   const date = new Date(annualAssessmentDate);
@@ -71,7 +73,20 @@ export function AddClientForm({ onClose }: { onClose: () => void }) {
   };
 
   if (showImportForm) {
-    return <ImportClientsForm onClose={() => setShowImportForm(false)} />;
+    return (
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-lg shadow-xl p-8">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              <span>Loading import form...</span>
+            </div>
+          </div>
+        </div>
+      }>
+        <ImportClientsForm onClose={() => setShowImportForm(false)} />
+      </Suspense>
+    );
   }
 
   return (
