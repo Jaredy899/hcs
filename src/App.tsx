@@ -3,15 +3,25 @@ import { Authenticated, Unauthenticated, useQuery, useMutation, useConvexAuth } 
 import { api } from "../convex/_generated/api";
 import { Toaster } from "sonner";
 import { ClientList } from "./ClientList";
-import { useState, useEffect } from "react";
-import { ClientDetails } from "./ClientDetails";
-import { AddClientForm } from "./AddClientForm";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { Button } from "@/components/ui/button";
 import { SearchProvider } from "./hooks/useSearchContext";
 import { useGlobalHotkeys } from "./hooks/useGlobalHotkeys";
 import { HotkeysButton, HotkeysHelp } from "./components/HotkeysHelp";
+
+// Lazy load heavy components
+const ClientDetails = lazy(() => import("./ClientDetails"));
+const AddClientForm = lazy(() => import("./AddClientForm"));
+
+// Loading component for lazy-loaded components
+const ComponentLoader = () => (
+  <div className="flex justify-center items-center py-8">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <span className="ml-2">Loading...</span>
+  </div>
+);
 
 export default function App() {
   return (
@@ -178,14 +188,18 @@ function Content({
 
       <Authenticated>
         {showAddClient && (
-          <AddClientForm onClose={() => setShowAddClient(false)} />
+          <Suspense fallback={<ComponentLoader />}>
+            <AddClientForm onClose={() => setShowAddClient(false)} />
+          </Suspense>
         )}
 
         {selectedClientId ? (
-          <ClientDetails
-            clientId={selectedClientId}
-            onClose={handleCloseClient}
-          />
+          <Suspense fallback={<ComponentLoader />}>
+            <ClientDetails
+              clientId={selectedClientId}
+              onClose={handleCloseClient}
+            />
+          </Suspense>
         ) : (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

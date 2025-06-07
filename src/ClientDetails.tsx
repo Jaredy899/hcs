@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Archive } from "lucide-react";
 import { usePendingChanges } from "./hooks/usePendingChanges";
 
-export function ClientDetails({
+export default function ClientDetails({
   clientId,
   onClose,
 }: {
