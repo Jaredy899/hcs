@@ -11,7 +11,7 @@ import { SearchProvider } from "./hooks/useSearchContext";
 import { useGlobalHotkeys } from "./hooks/useGlobalHotkeys";
 import { HotkeysButton, HotkeysHelp } from "./components/HotkeysHelp";
 import { StickyNotes } from "./components/StickyNotes";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { CompactModeToggle } from "./CompactModeToggle";
 
 // Lazy load heavy components
 const ClientDetails = lazy(() => import("./ClientDetails"));
@@ -258,19 +258,10 @@ function Content({
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl sm:text-3xl font-bold">Your Caseload</h1>
-                <Button
-                  variant={isCompactMode ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setIsCompactMode(!isCompactMode)}
-                  className="h-8 w-8 p-0"
-                  title={isCompactMode ? "Expand View" : "Compact View"}
-                >
-                  {isCompactMode ? (
-                    <Maximize2 className="w-3 h-3" />
-                  ) : (
-                    <Minimize2 className="w-3 h-3" />
-                  )}
-                </Button>
+                <CompactModeToggle 
+                  isCompact={isCompactMode}
+                  onToggle={() => setIsCompactMode(!isCompactMode)}
+                />
               </div>
               <p className="text-muted-foreground">
                 {clients.length} consumer{clients.length !== 1 ? 's' : ''} assigned
