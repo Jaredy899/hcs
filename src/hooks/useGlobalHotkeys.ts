@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export type HotkeyAction = 'focusSearch' | 'escape' | 'addClient' | 'showHelp';
+export type HotkeyAction = 'focusSearch' | 'escape' | 'addClient' | 'showHelp' | 'toggleStickyNotes' | 'newStickyNote';
 
 interface HotkeyConfig {
   key: string;
@@ -14,10 +14,11 @@ interface HotkeyConfig {
 const DEFAULT_HOTKEYS: HotkeyConfig[] = [
   { key: '/', action: 'focusSearch' },
   { key: 'Escape', action: 'escape' },
-  { key: 'n', ctrlKey: true, action: 'addClient' },
-  { key: 'n', metaKey: true, action: 'addClient' }, // For Mac
+  { key: 'n', ctrlKey: true, shiftKey: true, action: 'addClient' },
   { key: '?', action: 'showHelp' },
   { key: '?', shiftKey: true, action: 'showHelp' }, // For keyboards that need shift for ?
+  { key: 's', ctrlKey: true, shiftKey: true, action: 'toggleStickyNotes' },
+  { key: 'k', ctrlKey: true, shiftKey: true, action: 'newStickyNote' },
 ];
 
 interface UseGlobalHotkeysOptions {
@@ -25,6 +26,8 @@ interface UseGlobalHotkeysOptions {
   onEscape?: () => void;
   onAddClient?: () => void;
   onShowHelp?: () => void;
+  onToggleStickyNotes?: () => void;
+  onNewStickyNote?: () => void;
   enabled?: boolean;
   customHotkeys?: HotkeyConfig[];
 }
@@ -34,6 +37,8 @@ export function useGlobalHotkeys({
   onEscape,
   onAddClient,
   onShowHelp,
+  onToggleStickyNotes,
+  onNewStickyNote,
   enabled = true,
   customHotkeys = [],
 }: UseGlobalHotkeysOptions = {}) {
@@ -43,20 +48,13 @@ export function useGlobalHotkeys({
     const hotkeys = [...DEFAULT_HOTKEYS, ...customHotkeys];
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Don't trigger hotkeys when user is typing in an input, textarea, or contenteditable
       const target = event.target as HTMLElement;
-      if (
+      const isInInput = (
         target.tagName === 'INPUT' ||
         target.tagName === 'TEXTAREA' ||
         target.contentEditable === 'true' ||
         target.closest('[contenteditable="true"]')
-      ) {
-        // Allow escape key even in inputs
-        if (event.key === 'Escape') {
-          onEscape?.();
-        }
-        return;
-      }
+      );
 
       // Check each hotkey configuration
       for (const hotkey of hotkeys) {
@@ -67,31 +65,72 @@ export function useGlobalHotkeys({
         const metaMatches = !!hotkey.metaKey === event.metaKey;
 
         if (keyMatches && ctrlMatches && altMatches && shiftMatches && metaMatches) {
-          event.preventDefault();
-          event.stopPropagation();
-
-          switch (hotkey.action) {
-            case 'focusSearch':
-              onFocusSearch?.();
-              break;
-            case 'escape':
+          // If user is typing in an input, only allow certain hotkeys
+          if (isInInput) {
+            // Always allow Escape
+            if (hotkey.action === 'escape') {
+              event.preventDefault();
+              event.stopPropagation();
               onEscape?.();
               break;
-            case 'addClient':
-              onAddClient?.();
+            }
+            // Allow hotkeys with modifier keys (Alt, Ctrl, Meta) since they're unlikely to interfere with typing
+            else if (hotkey.altKey || hotkey.ctrlKey || hotkey.metaKey) {
+              event.preventDefault();
+              event.stopPropagation();
+              
+              switch (hotkey.action) {
+                case 'addClient':
+                  onAddClient?.();
+                  break;
+                case 'toggleStickyNotes':
+                  onToggleStickyNotes?.();
+                  break;
+                case 'newStickyNote':
+                  onNewStickyNote?.();
+                  break;
+              }
               break;
-            case 'showHelp':
-              onShowHelp?.();
-              break;
+            }
+            // Block simple keys like / and ? when typing in inputs
+            else {
+              continue;
+            }
           }
-          break; // Stop checking after first match
+          // If not in an input, allow all hotkeys
+          else {
+            event.preventDefault();
+            event.stopPropagation();
+
+            switch (hotkey.action) {
+              case 'focusSearch':
+                onFocusSearch?.();
+                break;
+              case 'escape':
+                onEscape?.();
+                break;
+              case 'addClient':
+                onAddClient?.();
+                break;
+              case 'showHelp':
+                onShowHelp?.();
+                break;
+              case 'toggleStickyNotes':
+                onToggleStickyNotes?.();
+                break;
+              case 'newStickyNote':
+                onNewStickyNote?.();
+                break;
+            }
+            break; // Stop checking after first match
+          }
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onFocusSearch, onEscape, onAddClient, onShowHelp, enabled, customHotkeys]);
+  }, [onFocusSearch, onEscape, onAddClient, onShowHelp, onToggleStickyNotes, onNewStickyNote, enabled, customHotkeys]);
 
   return {
     // Return the default hotkeys for display purposes

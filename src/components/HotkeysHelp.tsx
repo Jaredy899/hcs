@@ -13,9 +13,11 @@ export function HotkeysHelp({ isOpen, onClose }: HotkeysHelpProps) {
 
   const hotkeys = [
     { keys: ['/'], description: 'Focus search' },
-    { keys: ['Ctrl', 'N'], description: 'Add new consumer' },
+    { keys: ['Ctrl', 'Shift', 'N'], description: 'Add new consumer' },
+    { keys: ['Ctrl', 'Shift', 'S'], description: 'Toggle sticky notes' },
+    { keys: ['Ctrl', 'Shift', 'K'], description: 'Create new sticky note' },
     { keys: ['?'], description: 'Show keyboard shortcuts' },
-    { keys: ['Esc'], description: 'Close modal/Go back' },
+    { keys: ['Esc'], description: 'Close modal/Go back/Hide notes' },
     { keys: ['Enter'], description: 'Select client (when only one search result)' },
   ];
 
@@ -48,7 +50,7 @@ export function HotkeysHelp({ isOpen, onClose }: HotkeysHelpProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Use these keyboard shortcuts to navigate faster:
+            Use these keyboard shortcuts to navigate faster. Ctrl+Shift shortcuts work even when typing in search fields:
           </p>
           <div className="space-y-3">
             {hotkeys.map((hotkey, index) => (
@@ -71,7 +73,7 @@ export function HotkeysHelp({ isOpen, onClose }: HotkeysHelpProps) {
           </div>
           <div className="pt-4 border-t">
             <p className="text-xs text-muted-foreground">
-              Note: On Mac, use ⌘ (Cmd) instead of Ctrl
+              These shortcuts work consistently across all platforms and browsers.
             </p>
           </div>
         </CardContent>

@@ -64,6 +64,18 @@ function AppContent() {
     });
   };
 
+  const toggleStickyNotes = async () => {
+    if (!showStickyNotes) {
+      setShowStickyNotes(true);
+      // If no notes exist, create one automatically
+      if (stickyNotes.length === 0) {
+        await handleCreateNote();
+      }
+    } else {
+      setShowStickyNotes(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm p-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-b">
@@ -80,17 +92,7 @@ function AppContent() {
           <ThemeSwitcher />
           <Authenticated>
             <Button
-              onClick={async () => {
-                if (!showStickyNotes) {
-                  setShowStickyNotes(true);
-                  // If no notes exist, create one automatically
-                  if (stickyNotes.length === 0) {
-                    await handleCreateNote();
-                  }
-                } else {
-                  setShowStickyNotes(false);
-                }
-              }}
+              onClick={toggleStickyNotes}
               variant={showStickyNotes ? "default" : "outline"}
               size="sm"
               className="w-full sm:w-auto"
@@ -130,6 +132,9 @@ function AppContent() {
             setShowAddClient={setShowAddClient}
             showHelp={showHelp}
             setShowHelp={setShowHelp}
+            showStickyNotes={showStickyNotes}
+            toggleStickyNotes={toggleStickyNotes}
+            handleCreateNote={handleCreateNote}
           />
         </div>
       </main>
@@ -153,6 +158,9 @@ function Content({
   setShowAddClient,
   showHelp,
   setShowHelp,
+  showStickyNotes,
+  toggleStickyNotes,
+  handleCreateNote,
 }: {
   selectedClientId: Id<"clients"> | null;
   setSelectedClientId: (id: Id<"clients"> | null) => void;
@@ -160,6 +168,9 @@ function Content({
   setShowAddClient: (show: boolean) => void;
   showHelp: boolean;
   setShowHelp: (show: boolean) => void;
+  showStickyNotes: boolean;
+  toggleStickyNotes: () => void;
+  handleCreateNote: () => void;
 }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const createOrGetUser = useMutation(api.auth.createOrGetUser);
@@ -199,6 +210,8 @@ function Content({
         setShowAddClient(false);
       } else if (selectedClientId) {
         handleCloseClient();
+      } else if (showStickyNotes) {
+        toggleStickyNotes();
       }
     },
     onAddClient: () => {
@@ -208,6 +221,21 @@ function Content({
     },
     onShowHelp: () => {
       setShowHelp(true);
+    },
+    onToggleStickyNotes: () => {
+      if (isAuthenticated) {
+        toggleStickyNotes();
+      }
+    },
+    onNewStickyNote: () => {
+      if (isAuthenticated) {
+        // Ensure sticky notes are shown first
+        if (!showStickyNotes) {
+          toggleStickyNotes();
+        } else {
+          handleCreateNote();
+        }
+      }
     },
     enabled: isAuthenticated,
   });
