@@ -78,49 +78,104 @@ function AppContent() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm p-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-b">
-        <div className="flex items-center gap-2">
-          <img 
-            src="https://highlandscsb.org/wp-content/uploads/2012/10/favicon.png" 
-            alt="HCS Logo" 
-            className="w-6 h-6"
-          />
-          <h2 className="text-lg sm:text-xl font-semibold">HCS Case Management System</h2>
-        </div>
-        <div className="flex items-center gap-4 w-full sm:w-auto">
-          <HotkeysButton onClick={() => setShowHelp(true)} />
-          <ThemeSwitcher />
-          <Authenticated>
-            <Button
-              onClick={toggleStickyNotes}
-              variant={showStickyNotes ? "default" : "outline"}
-              size="sm"
-              className="w-full sm:w-auto"
-            >
-              📝 Notes
-            </Button>
-            <Button
-              onClick={() => setShowAddClient(true)}
-              className="w-full sm:w-auto"
-            >
-              Add Consumer
-            </Button>
-            <Button
-              onClick={() => signOut()}
-              variant="destructive"
-              className="w-full sm:w-auto"
-            >
-              Sign Out
-            </Button>
-            <UserButton />
-          </Authenticated>
-          <Unauthenticated>
-            <SignInButton mode="modal">
-              <Button>
-                Sign In
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm p-4 border-b">
+        {/* Mobile layout */}
+        <div className="flex flex-col gap-4 sm:hidden">
+          {/* Title row */}
+          <div className="flex items-center justify-center gap-2">
+            <img 
+              src="https://highlandscsb.org/wp-content/uploads/2012/10/favicon.png" 
+              alt="HCS Logo" 
+              className="w-6 h-6"
+            />
+            <h2 className="text-lg font-semibold">HCS Case Management System</h2>
+          </div>
+          
+          {/* Main action buttons row */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Authenticated>
+              <Button
+                onClick={toggleStickyNotes}
+                variant={showStickyNotes ? "default" : "outline"}
+                size="sm"
+                className="text-xs"
+              >
+                📝 Notes
               </Button>
-            </SignInButton>
-          </Unauthenticated>
+              <Button
+                onClick={() => setShowAddClient(true)}
+                size="sm"
+                className="text-xs"
+              >
+                Add Consumer
+              </Button>
+              <Button
+                onClick={() => signOut()}
+                variant="destructive"
+                size="sm"
+                className="text-xs"
+              >
+                Sign Out
+              </Button>
+              <UserButton />
+            </Authenticated>
+            <Unauthenticated>
+              <SignInButton mode="modal">
+                <Button size="sm">
+                  Sign In
+                </Button>
+              </SignInButton>
+            </Unauthenticated>
+          </div>
+          
+          {/* Utility buttons row */}
+          <div className="flex items-center justify-center gap-2">
+            <HotkeysButton onClick={() => setShowHelp(true)} />
+            <ThemeSwitcher />
+          </div>
+        </div>
+
+        {/* Desktop layout */}
+        <div className="hidden sm:flex justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <img 
+              src="https://highlandscsb.org/wp-content/uploads/2012/10/favicon.png" 
+              alt="HCS Logo" 
+              className="w-6 h-6"
+            />
+            <h2 className="text-xl font-semibold">HCS Case Management System</h2>
+          </div>
+          <div className="flex items-center gap-4">
+            <HotkeysButton onClick={() => setShowHelp(true)} />
+            <ThemeSwitcher />
+            <Authenticated>
+              <Button
+                onClick={toggleStickyNotes}
+                variant={showStickyNotes ? "default" : "outline"}
+              >
+                📝 Notes
+              </Button>
+              <Button
+                onClick={() => setShowAddClient(true)}
+              >
+                Add Consumer
+              </Button>
+              <Button
+                onClick={() => signOut()}
+                variant="destructive"
+              >
+                Sign Out
+              </Button>
+              <UserButton />
+            </Authenticated>
+            <Unauthenticated>
+              <SignInButton mode="modal">
+                <Button>
+                  Sign In
+                </Button>
+              </SignInButton>
+            </Unauthenticated>
+          </div>
         </div>
       </header>
       <main className="flex-1 p-4">
@@ -283,7 +338,7 @@ function Content({
           </Suspense>
         ) : (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col items-center text-center sm:flex-row sm:justify-between sm:items-center sm:text-left gap-4">
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl sm:text-3xl font-bold">Your Caseload</h1>
                 <CompactModeToggle 

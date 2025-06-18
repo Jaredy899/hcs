@@ -68,48 +68,59 @@ export default function ClientDetails({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-1 sm:p-2"
       onClick={handleClose}
     >
       <div 
-        className="bg-background rounded-lg shadow-lg w-full max-w-7xl max-h-[95vh] flex flex-col border"
+        className="bg-background rounded-lg shadow-lg w-full max-w-7xl max-h-[98vh] sm:max-h-[95vh] flex flex-col border"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky header */}
-        <div className="flex justify-between items-center sticky top-0 bg-background pb-3 border-b z-10 px-4 pt-4 rounded-t-lg">
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={handleClose}
-              variant="ghost"
-              size="sm"
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-            <h2 className="text-xl font-bold">{client.name}</h2>
-            {pendingChanges.hasPendingChanges && (
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                Unsaved changes
-              </span>
-            )}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center sticky top-0 bg-background border-b z-10 px-3 sm:px-4 pt-3 pb-3 rounded-t-lg gap-3 sm:gap-4">
+          <div className="flex flex-col w-full sm:w-auto">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button
+                onClick={handleClose}
+                variant="ghost"
+                size="sm"
+                className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
+              >
+                <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">Back</span>
+              </Button>
+              {pendingChanges.hasPendingChanges && (
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                  Unsaved changes
+                </span>
+              )}
+            </div>
+            {/* Mobile: Client name and phone side by side */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 sm:mt-0">
+              <h2 className="text-lg sm:text-xl font-bold leading-tight">{client.name}</h2>
+              {client.phoneNumber && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs sm:text-sm text-muted-foreground">📞</span>
+                  <span className="text-sm sm:text-base text-muted-foreground">{client.phoneNumber}</span>
+                </div>
+              )}
+            </div>
           </div>
           <Button
             onClick={handleArchive}
             variant="destructive"
             size="sm"
-            className="gap-2"
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3 self-end sm:self-auto"
           >
-            <Archive className="h-4 w-4" />
-            Archive
+            <Archive className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm">Archive</span>
           </Button>
         </div>
         
         {/* Scrollable content */}
-        <div className="overflow-y-auto p-4 flex-1">
-          <div className="space-y-4">
-            {/* Top row - 3 columns */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="overflow-y-auto p-3 sm:p-4 flex-1">
+          <div className="space-y-3 sm:space-y-4">
+            {/* Responsive grid: Mobile (1 col), Tablet (2 cols), Desktop (3 cols) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               <div className="space-y-3">
                 <ContactInformationSection client={client} />
                 <ContactStatusSection client={client} pendingChanges={pendingChanges} />
@@ -118,8 +129,8 @@ export default function ClientDetails({
               <ImportantDatesSection client={client} pendingChanges={pendingChanges} />
             </div>
 
-            {/* Bottom row - 2 columns for todos and notes */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {/* Bottom row - Responsive todos and notes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <TodoSection clientId={clientId} pendingChanges={pendingChanges} />
               <NotesSection clientId={clientId} />
             </div>
