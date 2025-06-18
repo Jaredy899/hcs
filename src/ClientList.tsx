@@ -261,30 +261,30 @@ export function ClientList({
              // Compact table view
              <Table>
                <TableHeader>
-                 <TableRow className="h-8">
+                 <TableRow>
                    <TableHead 
-                     className="text-center cursor-pointer hover:bg-muted/50 py-1 text-xs"
+                     className="text-center cursor-pointer hover:bg-muted/50"
                      onClick={() => handleColumnSort('name')}
                    >
                      Consumer{renderSortIndicator('name')}
                    </TableHead>
                    <TableHead 
-                     className="text-center cursor-pointer hover:bg-muted/50 py-1 text-xs"
+                     className="text-center cursor-pointer hover:bg-muted/50"
                      onClick={() => handleColumnSort('nextQR')}
                    >
                      Next QR{renderSortIndicator('nextQR')}
                    </TableHead>
                    <TableHead 
-                     className="text-center cursor-pointer hover:bg-muted/50 py-1 text-xs"
+                     className="text-center cursor-pointer hover:bg-muted/50"
                      onClick={() => handleColumnSort('lastContact')}
                    >
                      Last Contact{renderSortIndicator('lastContact')}
                    </TableHead>
                    <TableHead 
-                     className="text-center cursor-pointer hover:bg-muted/50 py-1 text-xs"
+                     className="text-center cursor-pointer hover:bg-muted/50"
                      onClick={() => handleColumnSort('lastF2F')}
                    >
-                     Last F2F{renderSortIndicator('lastF2F')}
+                     Last Face to Face{renderSortIndicator('lastF2F')}
                    </TableHead>
                  </TableRow>
                </TableHeader>
@@ -295,16 +295,23 @@ export function ClientList({
                    return (
                      <TableRow
                        key={client._id}
-                       className={`cursor-pointer transition-colors h-8 ${
+                       className={`cursor-pointer transition-colors h-6 ${
                          client._id === selectedClientId 
                            ? "bg-muted/50" 
                            : "hover:bg-muted/25"
                        }`}
                        onClick={() => onSelectClient(client._id)}
                      >
-                       <TableCell className="text-center py-1 px-2">
+                       <TableCell className="text-center py-0.5 px-1">
                          <div className="flex items-center justify-center gap-1">
-                           <span className="text-xs font-medium truncate max-w-[120px]">{client.name}</span>
+                           <div className="flex items-center gap-2 min-w-0">
+                             <span className="text-xs font-medium truncate">{client.name}</span>
+                             {client.phoneNumber && (
+                               <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                 {client.phoneNumber}
+                               </span>
+                             )}
+                           </div>
                            {todoCounts[client._id]?.incomplete > 0 && (
                              <ClipboardList className="w-2.5 h-2.5 text-blue-500 flex-shrink-0" />
                            )}
@@ -316,7 +323,7 @@ export function ClientList({
                            </div>
                          </div>
                        </TableCell>
-                       <TableCell className="text-center text-xs py-1 px-2">
+                       <TableCell className="text-center text-xs py-0.5 px-1">
                          {upcomingDates.nextQRDate ? (
                            <div className="flex items-center justify-center gap-0.5">
                              <span className={`${upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-blue-600 font-medium"}`}>
@@ -333,12 +340,12 @@ export function ClientList({
                            <span className="text-gray-400 text-[10px]">-</span>
                          )}
                        </TableCell>
-                       <TableCell className="text-center text-xs py-1 px-2">
+                       <TableCell className="text-center text-xs py-0.5 px-1">
                          {client.lastContactDate
                            ? <span className={getTimeBasedColor(client.lastContactDate, 30, "text-green-600")}>{new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                            : <span className="text-gray-400 text-[10px]">-</span>}
                        </TableCell>
-                       <TableCell className="text-center text-xs py-1 px-2">
+                       <TableCell className="text-center text-xs py-0.5 px-1">
                          {client.lastFaceToFaceDate
                            ? <span className={getTimeBasedColor(client.lastFaceToFaceDate, 90, "text-green-600")}>{new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                            : <span className="text-gray-400 text-[10px]">-</span>}
@@ -459,7 +466,7 @@ export function ClientList({
         <div className="md:hidden space-y-4">
           {isCompactMode ? (
             // Compact mobile view
-            <div className="space-y-2">
+            <div className="space-y-1">
               {filteredClients.map((client) => {
                 const upcomingDates = getUpcomingDates(client);
                 
@@ -471,14 +478,19 @@ export function ClientList({
                     }`}
                     onClick={() => onSelectClient(client._id)}
                   >
-                    <CardContent className="p-3">
+                    <CardContent className="p-2">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{client.name}</span>
-                          {todoCounts[client._id]?.incomplete > 0 && (
-                            <ClipboardList className="w-3 h-3 text-blue-500" />
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className="text-sm font-medium truncate">{client.name}</span>
+                          {client.phoneNumber && (
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {client.phoneNumber}
+                            </span>
                           )}
-                          <div className="flex gap-1">
+                          {todoCounts[client._id]?.incomplete > 0 && (
+                            <ClipboardList className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                          )}
+                          <div className="flex gap-1 flex-shrink-0">
                             <div className={`w-2 h-2 rounded-full ${client.firstContactCompleted ? "bg-green-500" : "bg-red-500"}`} />
                             <div className={`w-2 h-2 rounded-full ${client.secondContactCompleted ? "bg-green-500" : "bg-red-500"}`} />
                           </div>
@@ -516,21 +528,23 @@ export function ClientList({
                 >
                   <CardContent className="p-4">
                     <div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-base font-medium">{client.name}</h3>
+                        {client.phoneNumber && (
+                          <a 
+                            href={`tel:${client.phoneNumber}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            {client.phoneNumber}
+                          </a>
+                        )}
                         {todoCounts[client._id]?.incomplete > 0 && (
                           <div title={`${todoCounts[client._id].incomplete} incomplete todo${todoCounts[client._id].incomplete !== 1 ? 's' : ''}`}>
                             <ClipboardList className="w-3 h-3 text-blue-500" />
                           </div>
                         )}
                       </div>
-                      <a 
-                        href={`tel:${client.phoneNumber}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        {client.phoneNumber}
-                      </a>
                     </div>
                   </CardContent>
                 </Card>
