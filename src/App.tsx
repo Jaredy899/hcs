@@ -11,6 +11,7 @@ import { SearchProvider } from "./hooks/useSearchContext";
 import { useGlobalHotkeys } from "./hooks/useGlobalHotkeys";
 import { HotkeysButton, HotkeysHelp } from "./components/HotkeysHelp";
 import { StickyNotes } from "./components/StickyNotes";
+import { CompactModeToggle } from "./CompactModeToggle";
 
 // Lazy load heavy components
 const ClientDetails = lazy(() => import("./ClientDetails"));
@@ -165,6 +166,7 @@ function Content({
   const currentUser = useQuery(api.auth.getCurrentUser);
   const clients = useQuery(api.clients.list) || [];
   const [userCreated, setUserCreated] = useState(false);
+  const [isCompactMode, setIsCompactMode] = useState(false);
 
   // Create or get user when authenticated - only if currentUser query has loaded and returned null
   useEffect(() => {
@@ -254,7 +256,13 @@ function Content({
         ) : (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h1 className="text-2xl sm:text-3xl font-bold">Your Caseload</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl sm:text-3xl font-bold">Your Caseload</h1>
+                <CompactModeToggle 
+                  isCompact={isCompactMode}
+                  onToggle={() => setIsCompactMode(!isCompactMode)}
+                />
+              </div>
               <p className="text-muted-foreground">
                 {clients.length} consumer{clients.length !== 1 ? 's' : ''} assigned
               </p>
@@ -264,6 +272,7 @@ function Content({
               selectedClientId={selectedClientId}
               onSelectClient={setSelectedClientId}
               onCloseClient={handleCloseClient}
+              isCompactMode={isCompactMode}
             />
           </div>
         )}

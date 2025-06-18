@@ -62,8 +62,19 @@
 @layer base {
   * {
     @apply border-border;
-    transition-property: color, background-color, border-color;
-    transition-duration: 200ms;
+  }
+  
+  /* Apply transitions only to interactive elements and specific components */
+  button,
+  input,
+  textarea,
+  select,
+  a,
+  .transition-colors,
+  [class*="hover:"],
+  [class*="focus:"] {
+    transition-property: color, background-color, border-color, opacity, transform;
+    transition-duration: 150ms;
     transition-timing-function: ease-in-out;
   }
   body {

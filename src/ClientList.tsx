@@ -91,10 +91,12 @@ export function ClientList({
   selectedClientId,
   onSelectClient,
   onCloseClient,
+  isCompactMode,
 }: {
   selectedClientId: Id<"clients"> | null;
   onSelectClient: (id: Id<"clients">) => void;
   onCloseClient: () => void;
+  isCompactMode: boolean;
 }) {
   const clients = useQuery(api.clients.list) || [];
   const todoCounts = useQuery(api.todos.getClientTodoCounts) || {};
@@ -255,189 +257,286 @@ export function ClientList({
       <div className="space-y-4">
         {/* Desktop table view */}
         <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead 
-                  className="text-center cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleColumnSort('name')}
-                >
-                  Consumer{renderSortIndicator('name')}
-                </TableHead>
-                {/* <TableHead 
-                  className="text-center cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleColumnSort('annualAssessment')}
-                >
-                  Annual Assessment{renderSortIndicator('annualAssessment')}
-                </TableHead> */}
-                <TableHead 
-                  className="text-center cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleColumnSort('nextQR')}
-                >
-                  Next QR{renderSortIndicator('nextQR')}
-                </TableHead>
-                <TableHead 
-                  className="text-center cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleColumnSort('lastContact')}
-                >
-                  Last Contact{renderSortIndicator('lastContact')}
-                </TableHead>
-                <TableHead 
-                  className="text-center cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleColumnSort('lastF2F')}
-                >
-                  Last Face to Face{renderSortIndicator('lastF2F')}
-                </TableHead>
-                {/* <TableHead 
-                  className="text-center cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleColumnSort('nextF2F')}
-                >
-                  Next Face to Face{renderSortIndicator('nextF2F')}
-                </TableHead> */}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredClients.map((client) => {
-                const upcomingDates = getUpcomingDates(client);
-                
-                return (
-                  <TableRow
-                    key={client._id}
-                    className={`cursor-pointer transition-colors ${
-                      client._id === selectedClientId 
-                        ? "bg-muted/50" 
-                        : "hover:bg-muted/25"
-                    }`}
-                    onClick={() => onSelectClient(client._id)}
+                     {isCompactMode ? (
+             // Compact table view
+             <Table>
+               <TableHeader>
+                 <TableRow className="h-8">
+                   <TableHead 
+                     className="text-center cursor-pointer hover:bg-muted/50 py-1 text-xs"
+                     onClick={() => handleColumnSort('name')}
+                   >
+                     Consumer{renderSortIndicator('name')}
+                   </TableHead>
+                   <TableHead 
+                     className="text-center cursor-pointer hover:bg-muted/50 py-1 text-xs"
+                     onClick={() => handleColumnSort('nextQR')}
+                   >
+                     Next QR{renderSortIndicator('nextQR')}
+                   </TableHead>
+                   <TableHead 
+                     className="text-center cursor-pointer hover:bg-muted/50 py-1 text-xs"
+                     onClick={() => handleColumnSort('lastContact')}
+                   >
+                     Last Contact{renderSortIndicator('lastContact')}
+                   </TableHead>
+                   <TableHead 
+                     className="text-center cursor-pointer hover:bg-muted/50 py-1 text-xs"
+                     onClick={() => handleColumnSort('lastF2F')}
+                   >
+                     Last F2F{renderSortIndicator('lastF2F')}
+                   </TableHead>
+                 </TableRow>
+               </TableHeader>
+               <TableBody>
+                 {filteredClients.map((client) => {
+                   const upcomingDates = getUpcomingDates(client);
+                   
+                   return (
+                     <TableRow
+                       key={client._id}
+                       className={`cursor-pointer transition-colors h-8 ${
+                         client._id === selectedClientId 
+                           ? "bg-muted/50" 
+                           : "hover:bg-muted/25"
+                       }`}
+                       onClick={() => onSelectClient(client._id)}
+                     >
+                       <TableCell className="text-center py-1 px-2">
+                         <div className="flex items-center justify-center gap-1">
+                           <span className="text-xs font-medium truncate max-w-[120px]">{client.name}</span>
+                           {todoCounts[client._id]?.incomplete > 0 && (
+                             <ClipboardList className="w-2.5 h-2.5 text-blue-500 flex-shrink-0" />
+                           )}
+                           <div className="flex gap-0.5 ml-1 flex-shrink-0">
+                             <div className={`w-1.5 h-1.5 rounded-full ${client.firstContactCompleted ? "bg-green-500" : "bg-red-500"}`} 
+                                  title={client.firstContactCompleted ? "1st Contact Complete" : "1st Contact Incomplete"} />
+                             <div className={`w-1.5 h-1.5 rounded-full ${client.secondContactCompleted ? "bg-green-500" : "bg-red-500"}`}
+                                  title={client.secondContactCompleted ? "2nd Contact Complete" : "2nd Contact Incomplete"} />
+                           </div>
+                         </div>
+                       </TableCell>
+                       <TableCell className="text-center text-xs py-1 px-2">
+                         {upcomingDates.nextQRDate ? (
+                           <div className="flex items-center justify-center gap-0.5">
+                             <span className={`${upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-blue-600 font-medium"}`}>
+                               {upcomingDates.nextQRDate.toLocaleDateString(undefined, {
+                                 month: "short",
+                                 day: "numeric",
+                               })}
+                             </span>
+                             <span className="text-blue-400 text-[10px]">
+                               Q{upcomingDates.nextQRIndex + 1}
+                             </span>
+                           </div>
+                         ) : (
+                           <span className="text-gray-400 text-[10px]">-</span>
+                         )}
+                       </TableCell>
+                       <TableCell className="text-center text-xs py-1 px-2">
+                         {client.lastContactDate
+                           ? <span className={getTimeBasedColor(client.lastContactDate, 30, "text-green-600")}>{new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                           : <span className="text-gray-400 text-[10px]">-</span>}
+                       </TableCell>
+                       <TableCell className="text-center text-xs py-1 px-2">
+                         {client.lastFaceToFaceDate
+                           ? <span className={getTimeBasedColor(client.lastFaceToFaceDate, 90, "text-green-600")}>{new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                           : <span className="text-gray-400 text-[10px]">-</span>}
+                       </TableCell>
+                     </TableRow>
+                   );
+                 })}
+               </TableBody>
+             </Table>
+          ) : (
+            // Full table view (existing code)
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleColumnSort('name')}
                   >
-                    <TableCell className="text-center">
-                      <div>
-                        <div className="flex items-center justify-center gap-1">
-                          <h3 className="text-sm font-medium">{client.name}</h3>
-                          {todoCounts[client._id]?.incomplete > 0 && (
-                            <div title={`${todoCounts[client._id].incomplete} incomplete todo${todoCounts[client._id].incomplete !== 1 ? 's' : ''}`}>
-                              <ClipboardList className="w-3 h-3 text-blue-500" />
-                            </div>
-                          )}
+                    Consumer{renderSortIndicator('name')}
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleColumnSort('nextQR')}
+                  >
+                    Next QR{renderSortIndicator('nextQR')}
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleColumnSort('lastContact')}
+                  >
+                    Last Contact{renderSortIndicator('lastContact')}
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleColumnSort('lastF2F')}
+                  >
+                    Last Face to Face{renderSortIndicator('lastF2F')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClients.map((client) => {
+                  const upcomingDates = getUpcomingDates(client);
+                  
+                  return (
+                    <TableRow
+                      key={client._id}
+                      className={`cursor-pointer transition-colors ${
+                        client._id === selectedClientId 
+                          ? "bg-muted/50" 
+                          : "hover:bg-muted/25"
+                      }`}
+                      onClick={() => onSelectClient(client._id)}
+                    >
+                      <TableCell className="text-center">
+                        <div>
+                          <div className="flex items-center justify-center gap-1">
+                            <h3 className="text-sm font-medium">{client.name}</h3>
+                            {todoCounts[client._id]?.incomplete > 0 && (
+                              <div title={`${todoCounts[client._id].incomplete} incomplete todo${todoCounts[client._id].incomplete !== 1 ? 's' : ''}`}>
+                                <ClipboardList className="w-3 h-3 text-blue-500" />
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{client.phoneNumber}</p>
+                          <div className="flex gap-1 mt-1 justify-center">
+                            <Badge 
+                              variant={client.firstContactCompleted ? "secondary" : "destructive"} 
+                              className={`text-[10px] px-1.5 py-0.5 h-4 ${client.firstContactCompleted ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}`}
+                            >
+                              {client.firstContactCompleted ? "1st Contact ✓" : "1st Contact ✗"}
+                            </Badge>
+                            <Badge 
+                              variant={client.secondContactCompleted ? "secondary" : "destructive"} 
+                              className={`text-[10px] px-1.5 py-0.5 h-4 ${client.secondContactCompleted ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}`}
+                            >
+                              {client.secondContactCompleted ? "2nd Contact ✓" : "2nd Contact ✗"}
+                            </Badge>
+                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">{client.phoneNumber}</p>
-                        <div className="flex gap-1 mt-1 justify-center">
-                          <Badge 
-                            variant={client.firstContactCompleted ? "secondary" : "destructive"} 
-                            className={`text-[10px] px-1.5 py-0.5 h-4 ${client.firstContactCompleted ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}`}
-                          >
-                            {client.firstContactCompleted ? "1st Contact ✓" : "1st Contact ✗"}
-                          </Badge>
-                          <Badge 
-                            variant={client.secondContactCompleted ? "secondary" : "destructive"} 
-                            className={`text-[10px] px-1.5 py-0.5 h-4 ${client.secondContactCompleted ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}`}
-                          >
-                            {client.secondContactCompleted ? "2nd Contact ✓" : "2nd Contact ✗"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </TableCell>
-                    {/* <TableCell className="text-center text-xs text-muted-foreground">
-                      {client.nextAnnualAssessment
-                        ? (
-                          <span className={`${upcomingDates.isAnnualDueNextMonth ? "text-red-600 font-bold" : "text-purple-600 font-medium"}`}>
-                            {new Date(client.nextAnnualAssessment).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                              year: undefined
-                            })}
-                          </span>
-                        )
-                        : <span className="text-gray-400">Not set</span>}
-                    </TableCell> */}
-                    <TableCell className="text-center text-xs">
-                      {upcomingDates.nextQRDate ? (
-                        <div className="flex items-center justify-center gap-1">
-                          <span className={`${upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-blue-600 font-medium"}`}>
-                            {upcomingDates.nextQRDate.toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </span>
-                          <span className="text-blue-400 text-xs">
-                            (Q{upcomingDates.nextQRIndex + 1})
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">Not set</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center text-xs">
-                      {client.lastContactDate
-                        ? <span className={getTimeBasedColor(client.lastContactDate, 30, "text-green-600")}>{new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                        : <span className="text-gray-400">No contact recorded</span>}
-                    </TableCell>
-                    <TableCell className="text-center text-xs">
-                      {client.lastFaceToFaceDate
-                        ? <span className={getTimeBasedColor(client.lastFaceToFaceDate, 90, "text-green-600")}>{new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                        : <span className="text-gray-400">No face to face recorded</span>}
-                    </TableCell>
-                    {/* <TableCell className="text-center text-xs">
-                      {client.lastFaceToFaceDate
-                        ? (() => {
-                            const nextFaceToFaceDate = new Date(client.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000));
-                            const today = new Date();
-                            const daysUntilNext = Math.ceil((nextFaceToFaceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                            const isDueSoon = daysUntilNext <= 15;
-                            
-                            return (
-                              <span className={getUpcomingDateColor(nextFaceToFaceDate, 15, "text-indigo-600")}>
-                                {nextFaceToFaceDate.toLocaleDateString(undefined, {
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                              </span>
-                            );
-                          })()
-                        : <span className="text-gray-400">Not applicable</span>}
-                    </TableCell> */}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      </TableCell>
+                      <TableCell className="text-center text-xs">
+                        {upcomingDates.nextQRDate ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <span className={`${upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-blue-600 font-medium"}`}>
+                              {upcomingDates.nextQRDate.toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
+                            <span className="text-blue-400 text-xs">
+                              (Q{upcomingDates.nextQRIndex + 1})
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Not set</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center text-xs">
+                        {client.lastContactDate
+                          ? <span className={getTimeBasedColor(client.lastContactDate, 30, "text-green-600")}>{new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                          : <span className="text-gray-400">No contact recorded</span>}
+                      </TableCell>
+                      <TableCell className="text-center text-xs">
+                        {client.lastFaceToFaceDate
+                          ? <span className={getTimeBasedColor(client.lastFaceToFaceDate, 90, "text-green-600")}>{new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                          : <span className="text-gray-400">No face to face recorded</span>}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </div>
 
         {/* Mobile card view */}
         <div className="md:hidden space-y-4">
-          {filteredClients.map((client) => {
-            const upcomingDates = getUpcomingDates(client);
-            
-            return (
-              <Card
-                key={client._id}
-                className={`cursor-pointer transition-colors ${
-                  client._id === selectedClientId ? "ring-2 ring-primary" : ""
-                }`}
-                onClick={() => onSelectClient(client._id)}
-              >
-                <CardContent className="p-4">
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <h3 className="text-base font-medium">{client.name}</h3>
-                      {todoCounts[client._id]?.incomplete > 0 && (
-                        <div title={`${todoCounts[client._id].incomplete} incomplete todo${todoCounts[client._id].incomplete !== 1 ? 's' : ''}`}>
-                          <ClipboardList className="w-3 h-3 text-blue-500" />
+          {isCompactMode ? (
+            // Compact mobile view
+            <div className="space-y-2">
+              {filteredClients.map((client) => {
+                const upcomingDates = getUpcomingDates(client);
+                
+                return (
+                  <Card
+                    key={client._id}
+                    className={`cursor-pointer transition-colors ${
+                      client._id === selectedClientId ? "ring-2 ring-primary" : ""
+                    }`}
+                    onClick={() => onSelectClient(client._id)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{client.name}</span>
+                          {todoCounts[client._id]?.incomplete > 0 && (
+                            <ClipboardList className="w-3 h-3 text-blue-500" />
+                          )}
+                          <div className="flex gap-1">
+                            <div className={`w-2 h-2 rounded-full ${client.firstContactCompleted ? "bg-green-500" : "bg-red-500"}`} />
+                            <div className={`w-2 h-2 rounded-full ${client.secondContactCompleted ? "bg-green-500" : "bg-red-500"}`} />
+                          </div>
                         </div>
-                      )}
+                        <div className="text-xs text-right">
+                          {upcomingDates.nextQRDate && (
+                            <div className={upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-blue-600"}>
+                              Q{upcomingDates.nextQRIndex + 1}: {upcomingDates.nextQRDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </div>
+                          )}
+                          {client.lastContactDate && (
+                            <div className={getTimeBasedColor(client.lastContactDate, 30, "text-green-600")}>
+                              Last: {new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            // Full mobile view (existing code)
+            filteredClients.map((client) => {
+              const upcomingDates = getUpcomingDates(client);
+              
+              return (
+                <Card
+                  key={client._id}
+                  className={`cursor-pointer transition-colors ${
+                    client._id === selectedClientId ? "ring-2 ring-primary" : ""
+                  }`}
+                  onClick={() => onSelectClient(client._id)}
+                >
+                  <CardContent className="p-4">
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <h3 className="text-base font-medium">{client.name}</h3>
+                        {todoCounts[client._id]?.incomplete > 0 && (
+                          <div title={`${todoCounts[client._id].incomplete} incomplete todo${todoCounts[client._id].incomplete !== 1 ? 's' : ''}`}>
+                            <ClipboardList className="w-3 h-3 text-blue-500" />
+                          </div>
+                        )}
+                      </div>
+                      <a 
+                        href={`tel:${client.phoneNumber}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        {client.phoneNumber}
+                      </a>
                     </div>
-                    <a 
-                      href={`tel:${client.phoneNumber}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      {client.phoneNumber}
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
 
         {clients.length === 0 && (
