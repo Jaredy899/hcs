@@ -3,23 +3,39 @@ import { useEffect, useState } from "react";
 export function ThemeSwitcher() {
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== "undefined") {
-      return document.documentElement.classList.contains("dark");
+      const stored = localStorage.getItem("theme");
+      if (stored) {
+        return stored === "dark";
+      }
+      return document.documentElement.classList.contains("dark") || 
+             window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
     return true;
   });
 
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    const root = document.documentElement;
+    
+    // Use requestAnimationFrame for smoother transitions
+    requestAnimationFrame(() => {
+      if (isDark) {
+        root.classList.add("dark");
+        localStorage.setItem("theme", "dark");
+      } else {
+        root.classList.remove("dark");
+        localStorage.setItem("theme", "light");
+      }
+    });
   }, [isDark]);
+
+  const handleToggle = () => {
+    setIsDark(!isDark);
+  };
 
   return (
     <button
-      onClick={() => setIsDark(!isDark)}
-      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      onClick={handleToggle}
+      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150 active:scale-95"
       aria-label="Toggle theme"
     >
       {isDark ? (
