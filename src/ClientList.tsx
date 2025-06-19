@@ -323,8 +323,8 @@ export function ClientList({
                                  day: "numeric",
                                })}
                              </span>
-                             <span className="text-green-400 text-[10px]">
-                               Q{upcomingDates.nextQRIndex + 1}
+                             <span className="text-blue-500 text-[10px]">
+                               (Q{upcomingDates.nextQRIndex + 1})
                              </span>
                            </div>
                          ) : (
@@ -424,7 +424,7 @@ export function ClientList({
                                 day: "numeric",
                               })}
                             </span>
-                            <span className="text-green-400 text-xs">
+                            <span className="text-blue-500 text-xs">
                               (Q{upcomingDates.nextQRIndex + 1})
                             </span>
                           </div>
