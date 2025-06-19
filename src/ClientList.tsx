@@ -154,13 +154,7 @@ export function ClientList({
         comparison = aAnnual - bAnnual;
         break;
         
-      case 'nextQR':
-        const aUpcoming = getUpcomingDates(a);
-        const bUpcoming = getUpcomingDates(b);
-        const aQRDate = aUpcoming.nextQRDate ? aUpcoming.nextQRDate.getTime() : 0;
-        const bQRDate = bUpcoming.nextQRDate ? bUpcoming.nextQRDate.getTime() : 0;
-        comparison = aQRDate - bQRDate;
-        break;
+
         
       case 'lastContact':
         const aContact = a.lastContactDate || 0;
@@ -268,11 +262,8 @@ export function ClientList({
                    >
                      Consumer{renderSortIndicator('name')}
                    </TableHead>
-                   <TableHead 
-                     className="text-center cursor-pointer hover:bg-muted/50"
-                     onClick={() => handleColumnSort('nextQR')}
-                   >
-                     Next QR{renderSortIndicator('nextQR')}
+                   <TableHead className="text-center">
+                     Next QR
                    </TableHead>
                    <TableHead 
                      className="text-center cursor-pointer hover:bg-muted/50"
@@ -326,13 +317,13 @@ export function ClientList({
                        <TableCell className="text-center text-xs py-0.5 px-1">
                          {upcomingDates.nextQRDate ? (
                            <div className="flex items-center justify-center gap-0.5">
-                             <span className={`${upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-blue-600 font-medium"}`}>
+                             <span className={`${upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-green-600 font-medium"}`}>
                                {upcomingDates.nextQRDate.toLocaleDateString(undefined, {
                                  month: "short",
                                  day: "numeric",
                                })}
                              </span>
-                             <span className="text-blue-400 text-[10px]">
+                             <span className="text-green-400 text-[10px]">
                                Q{upcomingDates.nextQRIndex + 1}
                              </span>
                            </div>
@@ -366,11 +357,8 @@ export function ClientList({
                   >
                     Consumer{renderSortIndicator('name')}
                   </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleColumnSort('nextQR')}
-                  >
-                    Next QR{renderSortIndicator('nextQR')}
+                  <TableHead className="text-center">
+                    Next QR
                   </TableHead>
                   <TableHead 
                     className="text-center cursor-pointer hover:bg-muted/50"
@@ -430,13 +418,13 @@ export function ClientList({
                       <TableCell className="text-center text-xs">
                         {upcomingDates.nextQRDate ? (
                           <div className="flex items-center justify-center gap-1">
-                            <span className={`${upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-blue-600 font-medium"}`}>
+                            <span className={`${upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-green-600 font-medium"}`}>
                               {upcomingDates.nextQRDate.toLocaleDateString(undefined, {
                                 month: "short",
                                 day: "numeric",
                               })}
                             </span>
-                            <span className="text-blue-400 text-xs">
+                            <span className="text-green-400 text-xs">
                               (Q{upcomingDates.nextQRIndex + 1})
                             </span>
                           </div>
@@ -496,14 +484,14 @@ export function ClientList({
                           </div>
                         </div>
                         <div className="text-xs text-right">
-                          {upcomingDates.nextQRDate && (
-                            <div className={upcomingDates.isQRDue ? "text-red-600 font-bold" : "text-blue-600"}>
-                              Q{upcomingDates.nextQRIndex + 1}: {upcomingDates.nextQRDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                            </div>
-                          )}
                           {client.lastContactDate && (
                             <div className={getTimeBasedColor(client.lastContactDate, 30, "text-green-600")}>
-                              Last: {new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                              Contact: {new Date(client.lastContactDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </div>
+                          )}
+                          {client.lastFaceToFaceDate && (
+                            <div className={getTimeBasedColor(client.lastFaceToFaceDate, 90, "text-green-600")}>
+                              F2F: {new Date(client.lastFaceToFaceDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                             </div>
                           )}
                         </div>
