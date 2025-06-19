@@ -38,6 +38,7 @@ function AppContent() {
   const [showAddClient, setShowAddClient] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showStickyNotes, setShowStickyNotes] = useState(false);
+  const [isCompactMode, setIsCompactMode] = useState(false);
   const { signOut } = useClerk();
   
   const createStickyNote = useMutation(api.stickyNotes.create);
@@ -130,6 +131,12 @@ function AppContent() {
           
           {/* Utility buttons row */}
           <div className="flex items-center justify-center gap-2">
+            <Authenticated>
+              <CompactModeToggle 
+                isCompact={isCompactMode}
+                onToggle={() => setIsCompactMode(!isCompactMode)}
+              />
+            </Authenticated>
             <HotkeysButton onClick={() => setShowHelp(true)} />
             <ThemeSwitcher />
           </div>
@@ -146,6 +153,12 @@ function AppContent() {
             <h2 className="text-xl font-semibold">HCS Case Management System</h2>
           </div>
           <div className="flex items-center gap-4">
+            <Authenticated>
+              <CompactModeToggle 
+                isCompact={isCompactMode}
+                onToggle={() => setIsCompactMode(!isCompactMode)}
+              />
+            </Authenticated>
             <HotkeysButton onClick={() => setShowHelp(true)} />
             <ThemeSwitcher />
             <Authenticated>
@@ -190,6 +203,7 @@ function AppContent() {
             showStickyNotes={showStickyNotes}
             toggleStickyNotes={toggleStickyNotes}
             handleCreateNote={handleCreateNote}
+            isCompactMode={isCompactMode}
           />
         </div>
       </main>
@@ -216,6 +230,7 @@ function Content({
   showStickyNotes,
   toggleStickyNotes,
   handleCreateNote,
+  isCompactMode,
 }: {
   selectedClientId: Id<"clients"> | null;
   setSelectedClientId: (id: Id<"clients"> | null) => void;
@@ -226,13 +241,13 @@ function Content({
   showStickyNotes: boolean;
   toggleStickyNotes: () => void;
   handleCreateNote: () => void;
+  isCompactMode: boolean;
 }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const createOrGetUser = useMutation(api.auth.createOrGetUser);
   const currentUser = useQuery(api.auth.getCurrentUser);
   const clients = useQuery(api.clients.list) || [];
   const [userCreated, setUserCreated] = useState(false);
-  const [isCompactMode, setIsCompactMode] = useState(false);
 
   // Create or get user when authenticated - only if currentUser query has loaded and returned null
   useEffect(() => {
@@ -339,13 +354,7 @@ function Content({
         ) : (
           <div className="space-y-6">
             <div className="flex flex-col items-center text-center sm:flex-row sm:justify-between sm:items-center sm:text-left gap-4">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl font-bold">Your Caseload</h1>
-                <CompactModeToggle 
-                  isCompact={isCompactMode}
-                  onToggle={() => setIsCompactMode(!isCompactMode)}
-                />
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Your Caseload</h1>
               <p className="text-muted-foreground">
                 {clients.length} consumer{clients.length !== 1 ? 's' : ''} assigned
               </p>
