@@ -100,7 +100,6 @@ export function ClientList({
 }) {
   const clients = useQuery(api.clients.list) || [];
   const todoCounts = useQuery(api.todos.getClientTodoCounts) || {};
-  const updateClient = useMutation(api.clients.updateContact);
   const [sortBy, setSortBy] = useState<'first' | 'last'>('last');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -198,14 +197,7 @@ export function ClientList({
     }
   };
 
-  const handleMarkComplete = async (clientId: Id<"clients">, type: 'qr' | 'annual') => {
-    const today = new Date().getTime();
-    await updateClient({
-      id: clientId,
-      field: type === 'qr' ? 'lastQRCompleted' : 'lastAnnualCompleted',
-      value: today,
-    });
-  };
+
   
   // Helper function to render sort indicators
   const renderSortIndicator = (column: string) => {
