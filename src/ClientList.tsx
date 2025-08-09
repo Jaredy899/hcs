@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { useState, KeyboardEvent, useEffect, useRef } from "react";
@@ -448,7 +448,6 @@ export function ClientList({
             // Compact mobile view
             <div className="space-y-1">
               {filteredClients.map((client) => {
-                const upcomingDates = getUpcomingDates(client);
                 
                 return (
                   <Card
@@ -496,7 +495,6 @@ export function ClientList({
           ) : (
             // Full mobile view (existing code)
             filteredClients.map((client) => {
-              const upcomingDates = getUpcomingDates(client);
               
               return (
                 <Card

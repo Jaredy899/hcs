@@ -1,5 +1,5 @@
-import { useState, lazy, Suspense } from "react";
-import { useMutation } from "convex/react";
+import { useEffect, useState, lazy, Suspense } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,13 +47,32 @@ export default function AddClientForm({ onClose }: { onClose: () => void }) {
     insurance: "",
     clientId: ""
   });
+  const [autoFilledFromLookup, setAutoFilledFromLookup] = useState(false);
+
+  // Trigger lookup when exactly 6 digits are entered
+  const isSixDigits = formData.clientId.length === 6;
+  const existingClient = useQuery(
+    api.clients.getByClientId,
+    isSixDigits ? { clientId: formData.clientId } : "skip"
+  );
+
+  useEffect(() => {
+    if (existingClient && !autoFilledFromLookup) {
+      setFormData((prev) => ({
+        ...prev,
+        name: existingClient.name || prev.name,
+        phoneNumber: existingClient.phoneNumber || prev.phoneNumber,
+        insurance: existingClient.insurance || prev.insurance,
+      }));
+      setAutoFilledFromLookup(true);
+    }
+  }, [existingClient, autoFilledFromLookup]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const today = new Date();
     const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const qrDates = getQuarterlyReviewDates(firstOfMonth.getTime());
-    
+      
     await addClient({
       name: formData.name,
       phoneNumber: formData.phoneNumber,
@@ -122,6 +141,31 @@ export default function AddClientForm({ onClose }: { onClose: () => void }) {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
+              <Label htmlFor="clientId">Consumer ID</Label>
+              <Input
+                type="text"
+                id="clientId"
+                inputMode="numeric"
+                pattern="\\d{6}"
+                maxLength={6}
+                autoFocus
+                value={formData.clientId}
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
+                  setFormData({ ...formData, clientId: digitsOnly });
+                  setAutoFilledFromLookup(false);
+                }}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                {formData.clientId.length < 6 && "Enter 6-digit Consumer ID to check for existing record"}
+                {formData.clientId.length === 6 && existingClient === undefined && "Looking up consumer..."}
+                {formData.clientId.length === 6 && existingClient === null && "No existing consumer found. Continue entering details."}
+                {formData.clientId.length === 6 && existingClient && "Found existing consumer. Details auto-filled."}
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input
                 type="text"
@@ -153,20 +197,12 @@ export default function AddClientForm({ onClose }: { onClose: () => void }) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="clientId">Consumer ID</Label>
-              <Input
-                type="text"
-                id="clientId"
-                value={formData.clientId}
-                onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-              />
-            </div>
+            {/* Consumer ID moved to the top */}
 
             <Button
               type="submit"
               className="w-full"
-              disabled={!formData.name || !formData.phoneNumber}
+              disabled={!formData.name || !formData.phoneNumber || formData.clientId.length !== 6}
             >
               Add Consumer
             </Button>
