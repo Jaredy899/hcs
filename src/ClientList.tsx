@@ -296,9 +296,9 @@ export function ClientList({
                              )}
                            </div>
                            {todoCounts[client._id]?.incomplete > 0 && (
-                             <ClipboardList className="w-2.5 h-2.5 text-blue-500 flex-shrink-0" />
+                             <ClipboardList className="w-2.5 h-2.5 text-blue-500 shrink-0" />
                            )}
-                           <div className="flex gap-0.5 ml-1 flex-shrink-0">
+                           <div className="flex gap-0.5 ml-1 shrink-0">
                              <div className={`w-1.5 h-1.5 rounded-full ${client.firstContactCompleted ? "bg-green-500" : "bg-red-500"}`} 
                                   title={client.firstContactCompleted ? "1st Contact Complete" : "1st Contact Incomplete"} />
                              <div className={`w-1.5 h-1.5 rounded-full ${client.secondContactCompleted ? "bg-green-500" : "bg-red-500"}`}
@@ -467,9 +467,9 @@ export function ClientList({
                             </span>
                           )}
                           {todoCounts[client._id]?.incomplete > 0 && (
-                            <ClipboardList className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                            <ClipboardList className="w-3 h-3 text-blue-500 shrink-0" />
                           )}
-                          <div className="flex gap-1 flex-shrink-0">
+                          <div className="flex gap-1 shrink-0">
                             <div className={`w-2 h-2 rounded-full ${client.firstContactCompleted ? "bg-green-500" : "bg-red-500"}`} />
                             <div className={`w-2 h-2 rounded-full ${client.secondContactCompleted ? "bg-green-500" : "bg-red-500"}`} />
                           </div>

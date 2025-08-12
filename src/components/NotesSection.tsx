@@ -111,7 +111,7 @@ export function NotesSection({ clientId }: NotesSectionProps) {
               ) : (
                 <>
                   <div className="flex justify-between items-start gap-2">
-                    <p className="text-sm flex-grow">{note.text}</p>
+                    <p className="text-sm grow">{note.text}</p>
                     <div className="flex gap-1">
                       <Button
                         onClick={() => startEditing(note)}

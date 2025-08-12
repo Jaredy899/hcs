@@ -62,7 +62,7 @@ export function TodoSection({ clientId, pendingChanges }: TodoSectionProps) {
                   checked={displayCompleted}
                   onCheckedChange={() => handleToggleTodo(todo._id, displayCompleted)}
                 />
-                <span className={`flex-grow text-sm ${displayCompleted ? "line-through text-muted-foreground" : ""}`}>
+                <span className={`grow text-sm ${displayCompleted ? "line-through text-muted-foreground" : ""}`}>
                   {todo.text}
                 </span>
                 <Button
