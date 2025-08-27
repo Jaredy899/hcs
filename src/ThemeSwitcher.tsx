@@ -35,7 +35,7 @@ export function ThemeSwitcher() {
   return (
     <button
       onClick={handleToggle}
-      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150 active:scale-95"
+      className="p-2 rounded-lg transition-colors duration-150 active:scale-95 group"
       aria-label="Toggle theme"
     >
       {isDark ? (
@@ -45,7 +45,7 @@ export function ThemeSwitcher() {
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="w-5 h-5"
+          className="w-5 h-5 transition-colors duration-150 group-hover:text-yellow-500"
         >
           <path
             strokeLinecap="round"
@@ -60,7 +60,7 @@ export function ThemeSwitcher() {
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="w-5 h-5"
+          className="w-5 h-5 transition-colors duration-150 group-hover:text-blue-500"
         >
           <path
             strokeLinecap="round"
