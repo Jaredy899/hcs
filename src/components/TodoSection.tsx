@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
 import { HotkeyHint } from "./HotkeyHint";
 import { cn } from "@/lib/utils";
-import { useSectionFocus } from "./SectionFocusProvider";
+import { useSectionFocus } from "../hooks/useSectionFocus";
 
 interface TodoSectionProps {
   clientId: Id<"clients">;
@@ -36,7 +36,7 @@ export const TodoSection = forwardRef<HTMLDivElement, TodoSectionProps>(
     await addTodo({ clientId, text: newTodo });
     setNewTodo("");
     // Blur the input to allow hotkeys to work again
-    addTodoInputRef.current?.blur();
+    addTodoInputRef?.current?.blur();
   };
 
   const handleToggleTodo = (todoId: Id<"todos">, newCompleted: boolean) => {
@@ -126,7 +126,7 @@ export const TodoSection = forwardRef<HTMLDivElement, TodoSectionProps>(
 
   const handleSectionBlur = (e: React.FocusEvent) => {
     // Only blur if focus is moving outside the entire section
-    if (!ref.current?.contains(e.relatedTarget as Node)) {
+    if (ref && 'current' in ref && ref.current && !ref.current.contains(e.relatedTarget as Node)) {
       setFocusedSection(null);
     }
   };
@@ -170,7 +170,7 @@ export const TodoSection = forwardRef<HTMLDivElement, TodoSectionProps>(
                 e.preventDefault();
                 handleAddTodo(e);
                 // Blur the input to allow hotkeys to work again
-                addTodoInputRef.current?.blur();
+                addTodoInputRef?.current?.blur();
               }
             }}
           />

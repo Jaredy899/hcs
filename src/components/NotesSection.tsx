@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Edit, Save, X } from "lucide-react";
 import { HotkeyHint } from "./HotkeyHint";
 import { cn } from "@/lib/utils";
-import { useSectionFocus } from "./SectionFocusProvider";
+import { useSectionFocus } from "../hooks/useSectionFocus";
 
 interface NotesSectionProps {
   clientId: Id<"clients">;
@@ -34,7 +34,7 @@ export const NotesSection = forwardRef<HTMLDivElement, NotesSectionProps>(
     await addNote({ clientId, text: newNote });
     setNewNote("");
     // Blur the textarea to allow hotkeys to work again
-    addNoteTextareaRef.current?.blur();
+    addNoteTextareaRef?.current?.blur();
   };
 
   const startEditing = (note: { _id: Id<"notes">; text: string }) => {
@@ -128,7 +128,7 @@ export const NotesSection = forwardRef<HTMLDivElement, NotesSectionProps>(
 
   const handleSectionBlur = (e: React.FocusEvent) => {
     // Only blur if focus is moving outside the entire section
-    if (!ref.current?.contains(e.relatedTarget as Node)) {
+    if (ref && 'current' in ref && ref.current && !ref.current.contains(e.relatedTarget as Node)) {
       setFocusedSection(null);
     }
   };
@@ -171,7 +171,7 @@ export const NotesSection = forwardRef<HTMLDivElement, NotesSectionProps>(
                 e.preventDefault();
                 handleAddNote(e);
                 // Blur the textarea to allow hotkeys to work again
-                addNoteTextareaRef.current?.blur();
+                addNoteTextareaRef?.current?.blur();
               }
             }}
           />
@@ -179,7 +179,7 @@ export const NotesSection = forwardRef<HTMLDivElement, NotesSectionProps>(
             type="submit"
             size="sm"
             className="w-full h-7 text-xs"
-            title="Add Note (Ctrl+M)"
+            title="Add Note (Ctrl+Shift+M)"
           >
             Add Note
             <HotkeyHint hotkey="Ctrl+M" show={!isEditing} />
@@ -188,7 +188,7 @@ export const NotesSection = forwardRef<HTMLDivElement, NotesSectionProps>(
         <div className="space-y-2 max-h-40 overflow-y-auto">
           {notes.length === 0 ? (
             <div className="text-sm text-muted-foreground p-2 text-center">
-              No notes yet. Add one above or press Ctrl+M.
+              No notes yet. Add one above or press Ctrl+Shift+M.
             </div>
           ) : (
             <>

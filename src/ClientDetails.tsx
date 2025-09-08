@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Id } from "../convex/_generated/dataModel";
 import { ContactInformationSection } from "./components/ContactInformationSection";
@@ -14,7 +14,7 @@ import { ArrowLeft, Archive } from "lucide-react";
 import { usePendingChanges } from "./hooks/usePendingChanges";
 import { useClientDetailsHotkeys, isMac } from "./hooks/useClientDetailsHotkeys";
 import { HotkeyHint } from "./components/HotkeyHint";
-import { SectionFocusProvider } from "./components/SectionFocusProvider";
+import { SectionFocusProvider } from "./hooks/useSectionFocus";
 
 export default function ClientDetails({
   clientId,
@@ -35,6 +35,9 @@ export default function ClientDetails({
   const todoSectionRef = useRef<HTMLDivElement>(null);
   const notesSectionRef = useRef<HTMLDivElement>(null);
 
+  const [showForceCloseOption, setShowForceCloseOption] = useState(false);
+  const [lastSaveError, setLastSaveError] = useState<string | null>(null);
+
   const handleClose = async () => {
     console.log('Attempting to close modal, hasPendingChanges:', pendingChanges.hasPendingChanges);
     if (pendingChanges.hasPendingChanges) {
@@ -43,12 +46,25 @@ export default function ClientDetails({
         await pendingChanges.syncChanges();
         toast.success("Changes saved");
         console.log('Changes synced successfully');
+        setShowForceCloseOption(false);
+        setLastSaveError(null);
       } catch (error) {
         console.error("Failed to save changes:", error);
-        toast.error("Failed to save changes");
+        const errorMessage = error instanceof Error ? error.message : "Failed to save changes";
+        toast.error(errorMessage);
+        setLastSaveError(errorMessage);
+        setShowForceCloseOption(true);
         return; // Don't close if sync failed
       }
     }
+    onClose();
+  };
+
+  const handleForceClose = () => {
+    console.log('Force closing modal, discarding changes...');
+    toast.warning("Changes discarded");
+    setShowForceCloseOption(false);
+    setLastSaveError(null);
     onClose();
   };
 
@@ -197,6 +213,29 @@ export default function ClientDetails({
                 <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
                   Unsaved changes
                 </span>
+              )}
+              {showForceCloseOption && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-destructive bg-destructive/10 px-2 py-1 rounded">
+                    Save failed
+                  </span>
+                  <Button
+                    onClick={handleClose}
+                    variant="default"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                  >
+                    Try Again
+                  </Button>
+                  <Button
+                    onClick={handleForceClose}
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                  >
+                    Discard Changes
+                  </Button>
+                </div>
               )}
             </div>
             {/* Mobile: Client name and phone side by side */}

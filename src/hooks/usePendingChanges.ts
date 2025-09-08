@@ -106,29 +106,26 @@ export function usePendingChanges() {
     console.log('Syncing changes:', pendingChanges);
 
     try {
-      // Process all changes in parallel
-      const promises = pendingChanges.map(change => {
-        if (change.type === "todo") {
-          console.log('Syncing todo change:', change);
-          return toggleTodo({ id: change.id, completed: change.completed });
-        } else if (change.type === "contact") {
-          console.log('Syncing contact change:', change);
-          return updateContact({
-            id: change.clientId,
-            field: change.field,
-            value: change.value
-          });
-        } else {
-          console.log('Syncing date change:', change);
-          return updateContact({
-            id: change.clientId,
-            field: change.field,
-            value: change.value
-          });
+      // Process all changes sequentially to better handle errors
+      for (const change of pendingChanges) {
+        try {
+          if (change.type === "todo") {
+            console.log('Syncing todo change:', change);
+            await toggleTodo({ id: change.id, completed: change.completed });
+          } else if (change.type === "contact" || change.type === "date") {
+            console.log('Syncing contact/date change:', change);
+            await updateContact({
+              id: change.clientId,
+              field: change.field,
+              value: change.value
+            });
+          }
+        } catch (changeError) {
+          console.error(`Failed to sync individual change:`, change, changeError);
+          throw new Error(`Failed to sync ${change.type} change: ${changeError}`);
         }
-      });
+      }
 
-      await Promise.all(promises);
       console.log('All changes synced successfully');
       setPendingChanges([]);
     } catch (error) {
