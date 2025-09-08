@@ -178,7 +178,7 @@ export const TodoSection = forwardRef<HTMLDivElement, TodoSectionProps>(
             type="submit"
             size="sm"
             className="w-full h-7 text-xs"
-            title={`Add Todo (${navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? 'Ctrl+N' : 'Alt+N'})`}
+            title={`Add Todo (${navigator.userAgent.toLowerCase().includes('mac') ? 'Ctrl+N' : 'Alt+N'})`}
           >
             Add Todo
             <HotkeyHint hotkey="Ctrl+N" show={!isEditing} />
@@ -187,7 +187,7 @@ export const TodoSection = forwardRef<HTMLDivElement, TodoSectionProps>(
         <div className="space-y-2 max-h-40 overflow-y-auto">
           {todos.length === 0 ? (
             <div className="text-sm text-muted-foreground p-2 text-center">
-              No todos yet. Add one above or press Ctrl+N.
+              {`No todos yet. Add one above or press ${navigator.userAgent.toLowerCase().includes('mac') ? 'Ctrl+N' : 'Alt+N'}.`}
             </div>
           ) : (
             <>

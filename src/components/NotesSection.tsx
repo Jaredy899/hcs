@@ -179,7 +179,7 @@ export const NotesSection = forwardRef<HTMLDivElement, NotesSectionProps>(
             type="submit"
             size="sm"
             className="w-full h-7 text-xs"
-            title="Add Note (Ctrl+Shift+M)"
+            title={`Add Note (${navigator.userAgent.toLowerCase().includes('mac') ? 'Ctrl+M' : 'Alt+M'})`}
           >
             Add Note
             <HotkeyHint hotkey="Ctrl+M" show={!isEditing} />
@@ -188,7 +188,7 @@ export const NotesSection = forwardRef<HTMLDivElement, NotesSectionProps>(
         <div className="space-y-2 max-h-40 overflow-y-auto">
           {notes.length === 0 ? (
             <div className="text-sm text-muted-foreground p-2 text-center">
-              No notes yet. Add one above or press Ctrl+Shift+M.
+              {`No notes yet. Add one above or press ${navigator.userAgent.toLowerCase().includes('mac') ? 'Ctrl+M' : 'Alt+M'}.`}
             </div>
           ) : (
             <>

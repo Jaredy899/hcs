@@ -27,7 +27,7 @@ interface HotkeyConfig {
 }
 
 // Detect platform for cross-platform hotkey support
-export const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+export const isMac = navigator.userAgent.toLowerCase().includes('mac');
 export const getModifierKeyName = () => isMac ? 'Ctrl' : 'Alt';
 
 const CLIENT_DETAILS_HOTKEYS: HotkeyConfig[] = [
