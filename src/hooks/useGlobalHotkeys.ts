@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export type HotkeyAction = 'focusSearch' | 'escape' | 'addClient' | 'showHelp' | 'toggleStickyNotes' | 'newStickyNote';
+export type HotkeyAction = 'focusSearch' | 'escape' | 'addClient' | 'showHelp' | 'toggleStickyNotes' | 'newStickyNote' | 'toggleCompactMode';
 
 interface HotkeyConfig {
   key: string;
@@ -16,9 +16,9 @@ const DEFAULT_HOTKEYS: HotkeyConfig[] = [
   { key: 'Escape', action: 'escape' },
   { key: 'n', ctrlKey: true, shiftKey: true, action: 'addClient' },
   { key: '?', action: 'showHelp' },
-  { key: '?', shiftKey: true, action: 'showHelp' }, // For keyboards that need shift for ?
   { key: 's', ctrlKey: true, shiftKey: true, action: 'toggleStickyNotes' },
   { key: 'k', ctrlKey: true, shiftKey: true, action: 'newStickyNote' },
+  { key: 'c', altKey: true, action: 'toggleCompactMode' },
 ];
 
 interface UseGlobalHotkeysOptions {
@@ -28,6 +28,7 @@ interface UseGlobalHotkeysOptions {
   onShowHelp?: () => void;
   onToggleStickyNotes?: () => void;
   onNewStickyNote?: () => void;
+  onToggleCompactMode?: () => void;
   enabled?: boolean;
   customHotkeys?: HotkeyConfig[];
 }
@@ -39,6 +40,7 @@ export function useGlobalHotkeys({
   onShowHelp,
   onToggleStickyNotes,
   onNewStickyNote,
+  onToggleCompactMode,
   enabled = true,
   customHotkeys = [],
 }: UseGlobalHotkeysOptions = {}) {
@@ -59,12 +61,20 @@ export function useGlobalHotkeys({
       // Check each hotkey configuration
       for (const hotkey of hotkeys) {
         const keyMatches = event.key.toLowerCase() === hotkey.key.toLowerCase();
-        const ctrlMatches = !!hotkey.ctrlKey === event.ctrlKey;
-        const altMatches = !!hotkey.altKey === event.altKey;
+        // Platform-specific modifier handling
+        let modifierMatches = false;
+        if (hotkey.ctrlKey) {
+          modifierMatches = event.ctrlKey;
+        } else if (hotkey.altKey) {
+          // For Alt key shortcuts, also accept Ctrl on Mac (Cmd key)
+          modifierMatches = event.altKey || (event.ctrlKey && navigator.userAgent.toLowerCase().includes('mac'));
+        } else {
+          modifierMatches = !event.ctrlKey && !event.altKey && !event.metaKey;
+        }
         const shiftMatches = !!hotkey.shiftKey === event.shiftKey;
         const metaMatches = !!hotkey.metaKey === event.metaKey;
 
-        if (keyMatches && ctrlMatches && altMatches && shiftMatches && metaMatches) {
+        if (keyMatches && modifierMatches && shiftMatches && metaMatches) {
           // If user is typing in an input, only allow certain hotkeys
           if (isInInput) {
             // Always allow Escape
@@ -75,7 +85,7 @@ export function useGlobalHotkeys({
               break;
             }
             // Allow hotkeys with modifier keys (Alt, Ctrl, Meta) since they're unlikely to interfere with typing
-            else if (hotkey.altKey || hotkey.ctrlKey || hotkey.metaKey) {
+            else if (modifierMatches && (hotkey.altKey || hotkey.ctrlKey || hotkey.metaKey)) {
               event.preventDefault();
               event.stopPropagation();
               
@@ -88,6 +98,9 @@ export function useGlobalHotkeys({
                   break;
                 case 'newStickyNote':
                   onNewStickyNote?.();
+                  break;
+                case 'toggleCompactMode':
+                  onToggleCompactMode?.();
                   break;
               }
               break;
@@ -121,6 +134,9 @@ export function useGlobalHotkeys({
               case 'newStickyNote':
                 onNewStickyNote?.();
                 break;
+              case 'toggleCompactMode':
+                onToggleCompactMode?.();
+                break;
             }
             break; // Stop checking after first match
           }
@@ -130,7 +146,7 @@ export function useGlobalHotkeys({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onFocusSearch, onEscape, onAddClient, onShowHelp, onToggleStickyNotes, onNewStickyNote, enabled, customHotkeys]);
+  }, [onFocusSearch, onEscape, onAddClient, onShowHelp, onToggleStickyNotes, onNewStickyNote, onToggleCompactMode, enabled, customHotkeys]);
 
   return {
     // Return the default hotkeys for display purposes

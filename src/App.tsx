@@ -204,6 +204,7 @@ function AppContent() {
             toggleStickyNotes={toggleStickyNotes}
             handleCreateNote={handleCreateNote}
             isCompactMode={isCompactMode}
+            setIsCompactMode={setIsCompactMode}
           />
         </div>
       </main>
@@ -231,6 +232,7 @@ function Content({
   toggleStickyNotes,
   handleCreateNote,
   isCompactMode,
+  setIsCompactMode,
 }: {
   selectedClientId: Id<"clients"> | null;
   setSelectedClientId: (id: Id<"clients"> | null) => void;
@@ -242,6 +244,7 @@ function Content({
   toggleStickyNotes: () => void;
   handleCreateNote: () => void;
   isCompactMode: boolean;
+  setIsCompactMode: (compact: boolean) => void;
 }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const createOrGetUser = useMutation(api.auth.createOrGetUser);
@@ -305,6 +308,11 @@ function Content({
         } else {
           handleCreateNote();
         }
+      }
+    },
+    onToggleCompactMode: () => {
+      if (isAuthenticated) {
+        setIsCompactMode(!isCompactMode);
       }
     },
     enabled: isAuthenticated,

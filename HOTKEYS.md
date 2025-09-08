@@ -10,24 +10,28 @@ This application supports several keyboard shortcuts to help you navigate more e
 
 ## Client Management
 
-- **`Ctrl+Shift+N`** - Add new consumer (when on main list)
+- **`Ctrl+N` (Mac) / `Alt+N` (Windows/Linux)** - Add new consumer (when on main list)
 
 ## Sticky Notes
 
-- **`Ctrl+Shift+S`** - Toggle sticky notes visibility
-- **`Ctrl+Shift+K`** - Create new sticky note (shows sticky notes if hidden)
+- **`Ctrl+S` (Mac) / `Alt+S` (Windows/Linux)** - Toggle sticky notes visibility
+- **`Ctrl+K` (Mac) / `Alt+K` (Windows/Linux)** - Create new sticky note (shows sticky notes if hidden)
+
+## View Controls
+
+- **`Ctrl+C` (Mac) / `Alt+C` (Windows/Linux)** - Toggle compact view
 
 ## Help & Navigation
 
-- **`?`** - Show keyboard shortcuts help modal
+- **`Ctrl+?` (Mac) / `Alt+?` (Windows/Linux)** - Show keyboard shortcuts help modal
 - **`Escape`** - Close any open modal, go back to previous view, or hide sticky notes
 
 ## Browser-Friendly Design
 
 The hotkey system has been designed to avoid conflicts with common browser shortcuts and AutoHotkey remapping:
 
-- **Uses `Ctrl+Shift` combinations** to avoid "New Tab" (Ctrl+N) and other browser conflicts
-- **Compatible with AutoHotkey Alt remapping** since we don't use Alt keys
+- **Cross-platform modifier keys**: Uses `Ctrl` on Mac and `Alt` on Windows/Linux to avoid conflicts
+- **Compatible with AutoHotkey Alt remapping** on Windows/Linux systems
 - **Escape key** provides consistent "back" navigation through the app hierarchy
 
 ## Implementation Details
@@ -40,13 +44,14 @@ The hotkey system is implemented using
 
 ### Features
 
-- **Smart Context Awareness**: Simple hotkeys (/, ?) are disabled when typing in inputs, but modifier-based hotkeys (Ctrl+Shift+N, Ctrl+Shift+S) still work
+- **Smart Context Awareness**: Simple hotkeys (/) are disabled when typing in inputs, but modifier-based hotkeys work in all contexts
 - **Modal Hierarchy**: Escape key respects modal stack (help → add client → client details → sticky notes → main list)
 - **Simple Search**: Press `/` to quickly focus and select the search input
 - **Visual Feedback**: Help modal shows all available shortcuts
 - **Accessibility**: Keyboard-only navigation support
 - **Sticky Notes Integration**: Full keyboard control for note management
-- **Input-Safe Hotkeys**: Ctrl+Shift shortcuts work even when typing in search or form fields
+- **Input-Safe Hotkeys**: Modifier shortcuts work even when typing in search or form fields
+- **Cross-Platform**: Automatically adapts to Mac (Ctrl) vs Windows/Linux (Alt) conventions
 
 ### Hotkey Priority Order (Escape)
 
@@ -58,4 +63,4 @@ The hotkey system is implemented using
 
 ### Adding New Hotkeys
 
-To add new hotkeys, update the `DEFAULT_HOTKEYS` array in `src/hooks/useGlobalHotkeys.ts` and add the corresponding action handler.
+To add new hotkeys, update the `getDefaultHotkeys()` function in `src/hooks/useGlobalHotkeys.ts` and add the corresponding action handler. Use `[isMac ? 'ctrlKey' : 'altKey']: true` for cross-platform modifier keys.

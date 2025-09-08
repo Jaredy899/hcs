@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Keyboard, X } from 'lucide-react';
+import { isMac } from '../hooks/useClientDetailsHotkeys';
 
 interface HotkeysHelpProps {
   isOpen: boolean;
@@ -11,12 +12,15 @@ interface HotkeysHelpProps {
 export function HotkeysHelp({ isOpen, onClose }: HotkeysHelpProps) {
   if (!isOpen) return null;
 
+  const compactViewKeys = isMac ? ['Ctrl', 'C'] : ['Alt', 'C'];
+
   const hotkeys = [
     { keys: ['/'], description: 'Focus search' },
     { keys: ['Ctrl', 'Shift', 'N'], description: 'Add new consumer' },
+    { keys: ['?'], description: 'Show keyboard shortcuts' },
     { keys: ['Ctrl', 'Shift', 'S'], description: 'Toggle sticky notes' },
     { keys: ['Ctrl', 'Shift', 'K'], description: 'Create new sticky note' },
-    { keys: ['?'], description: 'Show keyboard shortcuts' },
+    { keys: compactViewKeys, description: 'Toggle compact view' },
     { keys: ['Esc'], description: 'Close modal/Go back/Hide notes' },
     { keys: ['Enter'], description: 'Select client (when only one search result)' },
   ];
@@ -50,7 +54,7 @@ export function HotkeysHelp({ isOpen, onClose }: HotkeysHelpProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Use these keyboard shortcuts to navigate faster. Ctrl+Shift shortcuts work even when typing in search fields:
+            Use these keyboard shortcuts to navigate faster. Ctrl+Shift and Alt shortcuts work even when typing in search fields:
           </p>
           <div className="space-y-3">
             {hotkeys.map((hotkey, index) => (
@@ -100,7 +104,7 @@ export function HotkeysButton({ onClick }: { onClick?: () => void }) {
         variant="ghost"
         size="sm"
         className="gap-2"
-        title="View keyboard shortcuts (Press ? for hotkey)"
+        title="View keyboard shortcuts (? for hotkey)"
       >
         <Keyboard className="h-4 w-4" />
         <span className="hidden sm:inline">Shortcuts</span>
