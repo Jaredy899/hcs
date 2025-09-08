@@ -103,18 +103,23 @@ export function usePendingChanges() {
   const syncChanges = useCallback(async () => {
     if (pendingChanges.length === 0) return;
 
+    console.log('Syncing changes:', pendingChanges);
+
     try {
       // Process all changes in parallel
       const promises = pendingChanges.map(change => {
         if (change.type === "todo") {
-          return toggleTodo({ id: change.id });
+          console.log('Syncing todo change:', change);
+          return toggleTodo({ id: change.id, completed: change.completed });
         } else if (change.type === "contact") {
+          console.log('Syncing contact change:', change);
           return updateContact({
             id: change.clientId,
             field: change.field,
             value: change.value
           });
         } else {
+          console.log('Syncing date change:', change);
           return updateContact({
             id: change.clientId,
             field: change.field,
@@ -124,6 +129,7 @@ export function usePendingChanges() {
       });
 
       await Promise.all(promises);
+      console.log('All changes synced successfully');
       setPendingChanges([]);
     } catch (error) {
       console.error("Failed to sync changes:", error);

@@ -36,20 +36,25 @@ export const create = mutation({
 });
 
 export const toggle = mutation({
-  args: { id: v.id("todos") },
+  args: {
+    id: v.id("todos"),
+    completed: v.optional(v.boolean())
+  },
   handler: async (ctx, args) => {
     const userId = await getCurrentUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     const todo = await ctx.db.get(args.id);
     if (!todo) throw new Error("Todo not found");
-    
+
     // Only the case manager who created the todo can toggle it
     if (todo.caseManagerId !== userId) {
       throw new Error("Not authorized to modify this todo");
     }
 
-    await ctx.db.patch(args.id, { completed: !todo.completed });
+    // If completed is provided, use it; otherwise toggle current state
+    const newCompleted = args.completed !== undefined ? args.completed : !todo.completed;
+    await ctx.db.patch(args.id, { completed: newCompleted });
   },
 });
 

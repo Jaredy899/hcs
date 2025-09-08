@@ -2,6 +2,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { HotkeyHint } from "./HotkeyHint";
 
 interface ContactStatusSectionProps {
   client: {
@@ -13,9 +14,10 @@ interface ContactStatusSectionProps {
     addContactChange: (clientId: Id<"clients">, field: "firstContactCompleted" | "secondContactCompleted", value: boolean) => void;
     getContactState: (clientId: Id<"clients">, field: "firstContactCompleted" | "secondContactCompleted", originalValue: boolean) => boolean;
   };
+  isEditing?: boolean;
 }
 
-export function ContactStatusSection({ client, pendingChanges }: ContactStatusSectionProps) {
+export function ContactStatusSection({ client, pendingChanges, isEditing = false }: ContactStatusSectionProps) {
   const handleToggleContact = (field: "firstContactCompleted" | "secondContactCompleted", currentValue: boolean) => {
     const newValue = !currentValue;
     pendingChanges.addContactChange(client._id, field, newValue);
@@ -38,6 +40,7 @@ export function ContactStatusSection({ client, pendingChanges }: ContactStatusSe
           />
           <Label htmlFor="first-contact" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             First Contact
+            <HotkeyHint hotkey="Ctrl+1" show={!isEditing} />
           </Label>
         </div>
         <div className="flex items-center space-x-2">
@@ -48,6 +51,7 @@ export function ContactStatusSection({ client, pendingChanges }: ContactStatusSe
           />
           <Label htmlFor="second-contact" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             Second Contact
+            <HotkeyHint hotkey="Ctrl+2" show={!isEditing} />
           </Label>
         </div>
       </CardContent>

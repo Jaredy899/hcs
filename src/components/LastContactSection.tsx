@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { getTimeBasedColor, getUpcomingDateColor } from "@/lib/dateColors";
+import { HotkeyHint } from "./HotkeyHint";
 
 interface LastContactSectionProps {
   client: {
@@ -15,9 +16,10 @@ interface LastContactSectionProps {
     addDateChange: (clientId: Id<"clients">, field: "lastContactDate" | "lastFaceToFaceDate", value: number) => void;
     getDateState: (clientId: Id<"clients">, field: "lastContactDate" | "lastFaceToFaceDate", originalValue: number | undefined) => number | undefined;
   };
+  isEditing?: boolean;
 }
 
-export function LastContactSection({ client, pendingChanges }: LastContactSectionProps) {
+export function LastContactSection({ client, pendingChanges, isEditing = false }: LastContactSectionProps) {
   const handleSetToday = (field: "lastContactDate" | "lastFaceToFaceDate") => {
     const today = new Date();
     pendingChanges.addDateChange(client._id, field, today.getTime());
@@ -46,9 +48,11 @@ export function LastContactSection({ client, pendingChanges }: LastContactSectio
               onClick={() => handleSetToday("lastContactDate")}
               size="sm"
               className="h-6 px-2 gap-1 text-xs"
+              title="Set Last Contact to Today (Ctrl+T)"
             >
               <Calendar className="h-3 w-3" />
               Today
+              <HotkeyHint hotkey="Ctrl+T" show={!isEditing} />
             </Button>
           </div>
           
@@ -75,9 +79,11 @@ export function LastContactSection({ client, pendingChanges }: LastContactSectio
               onClick={() => handleSetToday("lastFaceToFaceDate")}
               size="sm"
               className="h-6 px-2 gap-1 text-xs"
+              title="Set Last Face-to-Face to Today (Ctrl+F)"
             >
               <Calendar className="h-3 w-3" />
               Today
+              <HotkeyHint hotkey="Ctrl+F" show={!isEditing} />
             </Button>
           </div>
           
