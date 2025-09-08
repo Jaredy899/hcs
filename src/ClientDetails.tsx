@@ -154,6 +154,8 @@ export default function ClientDetails({
     onFocusTodoSection: handleFocusTodoSection,
     onFocusNotesSection: handleFocusNotesSection,
     onEscape: handleClose,
+    addTodoInputRef,
+    addNoteTextareaRef,
   });
 
   return (

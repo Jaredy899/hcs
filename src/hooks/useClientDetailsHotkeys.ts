@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 
 export type ClientDetailsHotkeyAction =
   | 'setLastContactToday'
@@ -66,6 +67,8 @@ interface UseClientDetailsHotkeysOptions {
   onFocusNotesSection?: () => void;
   onEscape?: () => void;
   enabled?: boolean;
+  addTodoInputRef?: React.RefObject<HTMLInputElement>;
+  addNoteTextareaRef?: React.RefObject<HTMLTextAreaElement>;
 }
 
 export function useClientDetailsHotkeys({
@@ -86,6 +89,8 @@ export function useClientDetailsHotkeys({
   onFocusNotesSection,
   onEscape,
   enabled = true,
+  addTodoInputRef,
+  addNoteTextareaRef,
 }: UseClientDetailsHotkeysOptions = {}) {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -135,6 +140,16 @@ export function useClientDetailsHotkeys({
 
     // Handle different cases based on input state
     if (isInInput) {
+      // Special handling for ESC key in add todo/note inputs
+      if (hotkey.action === 'escape' &&
+          (event.target === addTodoInputRef?.current || event.target === addNoteTextareaRef?.current)) {
+        // Just blur the input - the component will handle clearing state appropriately
+        event.preventDefault();
+        event.stopPropagation();
+        (event.target as HTMLElement).blur();
+        return;
+      }
+
       // When editing, only allow certain hotkeys
       if (['cancelEdit', 'saveNote', 'escape'].includes(hotkey.action)) {
         event.preventDefault();
@@ -226,6 +241,8 @@ export function useClientDetailsHotkeys({
     onFocusTodoSection,
     onFocusNotesSection,
     onEscape,
+    addTodoInputRef,
+    addNoteTextareaRef,
   ]);
 
   useEffect(() => {

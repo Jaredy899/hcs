@@ -172,7 +172,16 @@ export const NotesSection = forwardRef<HTMLDivElement, NotesSectionProps>(
                 handleAddNote(e);
                 // Blur the textarea to allow hotkeys to work again
                 addNoteTextareaRef?.current?.blur();
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                // Clear unsaved text and blur the textarea
+                setNewNote("");
+                addNoteTextareaRef?.current?.blur();
               }
+            }}
+            onBlur={() => {
+              // Clear unsaved text when textarea loses focus
+              setNewNote("");
             }}
           />
           <Button

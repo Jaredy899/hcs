@@ -171,7 +171,16 @@ export const TodoSection = forwardRef<HTMLDivElement, TodoSectionProps>(
                 handleAddTodo(e);
                 // Blur the input to allow hotkeys to work again
                 addTodoInputRef?.current?.blur();
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                // Clear unsaved text and blur the input
+                setNewTodo("");
+                addTodoInputRef?.current?.blur();
               }
+            }}
+            onBlur={() => {
+              // Clear unsaved text when input loses focus
+              setNewTodo("");
             }}
           />
           <Button
