@@ -12,6 +12,23 @@ This application supports several keyboard shortcuts to help you navigate more e
 
 - **`Ctrl+N` (Mac) / `Alt+N` (Windows/Linux)** - Add new consumer (when on main list)
 
+## Client Details Hotkeys
+
+- **`Ctrl+H` (Mac) / `Alt+H` (Windows/Linux)** - Toggle hotkey hints visibility in client details modal (off by default)
+- **`Ctrl+T` (Mac) / `Alt+T` (Windows/Linux)** - Set last contact to today
+- **`Ctrl+F` (Mac) / `Alt+F` (Windows/Linux)** - Set last face-to-face to today
+- **`Ctrl+1` (Mac) / `Alt+1` (Windows/Linux)** - Toggle first contact status
+- **`Ctrl+2` (Mac) / `Alt+2` (Windows/Linux)** - Toggle second contact status
+- **`Ctrl+N` (Mac) / `Alt+N` (Windows/Linux)** - Focus add todo input
+- **`Ctrl+M` (Mac) / `Alt+M` (Windows/Linux)** - Focus add note textarea
+- **`Ctrl+C` (Mac) / `Alt+C` (Windows/Linux)** - Focus contact section
+- **`Ctrl+S` (Mac) / `Alt+S` (Windows/Linux)** - Focus status section
+- **`Ctrl+O` (Mac) / `Alt+O` (Windows/Linux)** - Focus todo section
+- **`Ctrl+N` (Mac) / `Alt+N` (Windows/Linux)** - Focus notes section
+- **`Ctrl+A` (Mac) / `Alt+A` (Windows/Linux)** - Archive client
+- **`Ctrl+B` (Mac) / `Alt+B` (Windows/Linux)** - Go back to client list
+- **`Escape`** - Cancel editing or close modal
+
 ## Sticky Notes
 
 - **`Ctrl+S` (Mac) / `Alt+S` (Windows/Linux)** - Toggle sticky notes visibility
@@ -52,6 +69,7 @@ The hotkey system is implemented using
 - **Sticky Notes Integration**: Full keyboard control for note management
 - **Input-Safe Hotkeys**: Modifier shortcuts work even when typing in search or form fields
 - **Cross-Platform**: Automatically adapts to Mac (Ctrl) vs Windows/Linux (Alt) conventions
+- **Hotkey Hint Toggle**: Press `Ctrl+H`/`Alt+H` to show/hide hotkey hints in client details modal (off by default for cleaner interface)
 
 ### Hotkey Priority Order (Escape)
 

@@ -140,7 +140,7 @@ export default function ClientDetails({
   };
 
   // Initialize hotkeys
-  const { isEditing } = useClientDetailsHotkeys({
+  const { isEditing, showHotkeyHints } = useClientDetailsHotkeys({
     onSetLastContactToday: handleSetLastContactToday,
     onSetFaceToFaceToday: handleSetFaceToFaceToday,
     onToggleFirstContact: handleToggleFirstContact,
@@ -154,8 +154,8 @@ export default function ClientDetails({
     onFocusTodoSection: handleFocusTodoSection,
     onFocusNotesSection: handleFocusNotesSection,
     onEscape: handleClose,
-    addTodoInputRef,
-    addNoteTextareaRef,
+    addTodoInputRef: addTodoInputRef as React.RefObject<HTMLInputElement>,
+    addNoteTextareaRef: addNoteTextareaRef as React.RefObject<HTMLTextAreaElement>,
   });
 
   return (
@@ -209,7 +209,7 @@ export default function ClientDetails({
               >
                 <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="text-xs sm:text-sm">Back</span>
-                <HotkeyHint hotkey="Ctrl+B" show={!isEditing} />
+                <HotkeyHint hotkey="Ctrl+B" show={!isEditing && showHotkeyHints} />
               </Button>
               {pendingChanges.hasPendingChanges && (
                 <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
@@ -260,7 +260,7 @@ export default function ClientDetails({
           >
             <Archive className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="text-xs sm:text-sm">Archive</span>
-            <HotkeyHint hotkey="Ctrl+A" show={!isEditing} />
+            <HotkeyHint hotkey="Ctrl+A" show={!isEditing && showHotkeyHints} />
           </Button>
         </div>
         
@@ -274,10 +274,10 @@ export default function ClientDetails({
                   <ContactInformationSection client={client} />
                 </div>
                 <div ref={statusSectionRef}>
-                  <ContactStatusSection client={client} pendingChanges={pendingChanges} isEditing={isEditing} />
+                  <ContactStatusSection client={client} pendingChanges={pendingChanges} isEditing={isEditing} showHotkeyHints={showHotkeyHints} />
                 </div>
               </div>
-              <LastContactSection client={client} pendingChanges={pendingChanges} isEditing={isEditing} />
+              <LastContactSection client={client} pendingChanges={pendingChanges} isEditing={isEditing} showHotkeyHints={showHotkeyHints} />
               <ImportantDatesSection client={client} pendingChanges={pendingChanges} />
             </div>
 
@@ -288,6 +288,7 @@ export default function ClientDetails({
                   clientId={clientId}
                   pendingChanges={pendingChanges}
                   isEditing={isEditing}
+                  showHotkeyHints={showHotkeyHints}
                   addTodoInputRef={addTodoInputRef as React.RefObject<HTMLInputElement>}
                 />
               </div>
@@ -295,6 +296,7 @@ export default function ClientDetails({
                 <NotesSection
                   clientId={clientId}
                   isEditing={isEditing}
+                  showHotkeyHints={showHotkeyHints}
                   addNoteTextareaRef={addNoteTextareaRef as React.RefObject<HTMLTextAreaElement>}
                 />
               </div>

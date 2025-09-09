@@ -13,11 +13,12 @@ import { useSectionFocus } from "../hooks/useSectionFocus";
 interface NotesSectionProps {
   clientId: Id<"clients">;
   isEditing?: boolean;
+  showHotkeyHints?: boolean;
   addNoteTextareaRef?: React.RefObject<HTMLTextAreaElement>;
 }
 
 export const NotesSection = forwardRef<HTMLDivElement, NotesSectionProps>(
-  ({ clientId, isEditing = false, addNoteTextareaRef }, ref) => {
+  ({ clientId, isEditing = false, showHotkeyHints = false, addNoteTextareaRef }, ref) => {
   const notes = useQuery(api.notes.list, { clientId }) || [];
   const addNote = useMutation(api.notes.create);
   const updateNote = useMutation(api.notes.update);
@@ -191,7 +192,7 @@ export const NotesSection = forwardRef<HTMLDivElement, NotesSectionProps>(
             title={`Add Note (${navigator.userAgent.toLowerCase().includes('mac') ? 'Ctrl+M' : 'Alt+M'})`}
           >
             Add Note
-            <HotkeyHint hotkey="Ctrl+M" show={!isEditing} />
+            <HotkeyHint hotkey="Ctrl+M" show={!isEditing && showHotkeyHints} />
           </Button>
         </form>
         <div className="space-y-2 max-h-40 overflow-y-auto">

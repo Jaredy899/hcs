@@ -17,7 +17,8 @@ export type ClientDetailsHotkeyAction =
   | 'focusStatusSection'
   | 'focusTodoSection'
   | 'focusNotesSection'
-  | 'escape';
+  | 'escape'
+  | 'toggleHotkeyHints';
 
 interface HotkeyConfig {
   key: string;
@@ -46,6 +47,7 @@ const CLIENT_DETAILS_HOTKEYS: HotkeyConfig[] = [
   { key: 's', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'focusStatusSection', description: 'Focus Status Section' },
   { key: 'o', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'focusTodoSection', description: 'Focus Todo Section' },
   { key: 'n', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'focusNotesSection', description: 'Focus Notes Section' },
+  { key: 'h', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'toggleHotkeyHints', description: 'Toggle Hotkey Hints' },
   { key: 'Escape', [isMac ? 'ctrlKey' : 'altKey']: false, action: 'escape', description: 'Cancel Editing or Close Modal' },
 ];
 
@@ -93,6 +95,7 @@ export function useClientDetailsHotkeys({
   addNoteTextareaRef,
 }: UseClientDetailsHotkeysOptions = {}) {
   const [isEditing, setIsEditing] = useState(false);
+  const [showHotkeyHints, setShowHotkeyHints] = useState(false);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!enabled) return;
@@ -219,6 +222,9 @@ export function useClientDetailsHotkeys({
       case 'focusNotesSection':
         onFocusNotesSection?.();
         break;
+      case 'toggleHotkeyHints':
+        setShowHotkeyHints(prev => !prev);
+        break;
       case 'escape':
         onEscape?.();
         break;
@@ -288,5 +294,6 @@ export function useClientDetailsHotkeys({
   return {
     hotkeys: CLIENT_DETAILS_HOTKEYS,
     isEditing,
+    showHotkeyHints,
   };
 }

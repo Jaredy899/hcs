@@ -17,9 +17,10 @@ interface LastContactSectionProps {
     getDateState: (clientId: Id<"clients">, field: "lastContactDate" | "lastFaceToFaceDate", originalValue: number | undefined) => number | undefined;
   };
   isEditing?: boolean;
+  showHotkeyHints?: boolean;
 }
 
-export function LastContactSection({ client, pendingChanges, isEditing = false }: LastContactSectionProps) {
+export function LastContactSection({ client, pendingChanges, isEditing = false, showHotkeyHints = false }: LastContactSectionProps) {
   const handleSetToday = (field: "lastContactDate" | "lastFaceToFaceDate") => {
     const today = new Date();
     pendingChanges.addDateChange(client._id, field, today.getTime());
@@ -52,7 +53,7 @@ export function LastContactSection({ client, pendingChanges, isEditing = false }
             >
               <Calendar className="h-3 w-3" />
               Today
-              <HotkeyHint hotkey="Ctrl+T" show={!isEditing} />
+              <HotkeyHint hotkey="Ctrl+T" show={!isEditing && showHotkeyHints} />
             </Button>
           </div>
           
@@ -83,7 +84,7 @@ export function LastContactSection({ client, pendingChanges, isEditing = false }
             >
               <Calendar className="h-3 w-3" />
               Today
-              <HotkeyHint hotkey="Ctrl+F" show={!isEditing} />
+              <HotkeyHint hotkey="Ctrl+F" show={!isEditing && showHotkeyHints} />
             </Button>
           </div>
           

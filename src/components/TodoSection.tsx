@@ -18,11 +18,12 @@ interface TodoSectionProps {
     getTodoState: (id: Id<"todos">, originalCompleted: boolean) => boolean;
   };
   isEditing?: boolean;
+  showHotkeyHints?: boolean;
   addTodoInputRef?: React.RefObject<HTMLInputElement>;
 }
 
 export const TodoSection = forwardRef<HTMLDivElement, TodoSectionProps>(
-  ({ clientId, pendingChanges, isEditing = false, addTodoInputRef }, ref) => {
+  ({ clientId, pendingChanges, isEditing = false, showHotkeyHints = false, addTodoInputRef }, ref) => {
   const todos = useQuery(api.todos.list, { clientId }) || [];
   const addTodo = useMutation(api.todos.create);
   const deleteTodo = useMutation(api.todos.remove);
@@ -190,7 +191,7 @@ export const TodoSection = forwardRef<HTMLDivElement, TodoSectionProps>(
             title={`Add Todo (${navigator.userAgent.toLowerCase().includes('mac') ? 'Ctrl+N' : 'Alt+N'})`}
           >
             Add Todo
-            <HotkeyHint hotkey="Ctrl+N" show={!isEditing} />
+            <HotkeyHint hotkey="Ctrl+N" show={!isEditing && showHotkeyHints} />
           </Button>
         </form>
         <div className="space-y-2 max-h-40 overflow-y-auto">
