@@ -17,7 +17,7 @@ export function HotkeysHelp({ isOpen, onClose }: HotkeysHelpProps) {
   const hotkeys = [
     { keys: ['/'], description: 'Focus search' },
     { keys: ['Ctrl', 'Shift', 'N'], description: 'Add new consumer' },
-    { keys: ['?'], description: 'Show keyboard shortcuts' },
+    { keys: [isMac ? 'Ctrl' : 'Alt', 'H'], description: 'Show keyboard shortcuts' },
     { keys: ['Ctrl', 'Shift', 'S'], description: 'Toggle sticky notes' },
     { keys: ['Ctrl', 'Shift', 'K'], description: 'Create new sticky note' },
     { keys: compactViewKeys, description: 'Toggle compact view' },

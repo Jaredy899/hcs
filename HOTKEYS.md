@@ -40,7 +40,7 @@ This application supports several keyboard shortcuts to help you navigate more e
 
 ## Help & Navigation
 
-- **`Ctrl+?` (Mac) / `Alt+?` (Windows/Linux)** - Show keyboard shortcuts help modal
+- **`Ctrl+H` (Mac) / `Alt+H` (Windows/Linux)** - Toggle keyboard shortcuts help modal
 - **`Escape`** - Close any open modal, go back to previous view, or hide sticky notes
 
 ## Browser-Friendly Design
@@ -64,10 +64,10 @@ The hotkey system is implemented using
 - **Smart Context Awareness**: Simple hotkeys (/) are disabled when typing in inputs, but modifier-based hotkeys work in all contexts
 - **Modal Hierarchy**: Escape key respects modal stack (help → add client → client details → sticky notes → main list)
 - **Simple Search**: Press `/` to quickly focus and select the search input
-- **Visual Feedback**: Help modal shows all available shortcuts
+- **Visual Feedback**: Help modal shows all available shortcuts and can be toggled with the same hotkey
 - **Accessibility**: Keyboard-only navigation support
 - **Sticky Notes Integration**: Full keyboard control for note management
-- **Input-Safe Hotkeys**: Modifier shortcuts work even when typing in search or form fields
+- **Input-Safe Hotkeys**: Modifier shortcuts work even when typing in search or form fields (including help hotkey `Ctrl+H`/`Alt+H`)
 - **Cross-Platform**: Automatically adapts to Mac (Ctrl) vs Windows/Linux (Alt) conventions
 - **Hotkey Hint Toggle**: Press `Ctrl+H`/`Alt+H` to show/hide hotkey hints in client details modal (off by default for cleaner interface)
 

@@ -293,7 +293,7 @@ function Content({
       }
     },
     onShowHelp: () => {
-      setShowHelp(true);
+      setShowHelp(!showHelp);
     },
     onToggleStickyNotes: () => {
       if (isAuthenticated) {

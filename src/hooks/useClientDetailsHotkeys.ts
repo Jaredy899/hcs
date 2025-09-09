@@ -154,7 +154,7 @@ export function useClientDetailsHotkeys({
       }
 
       // When editing, only allow certain hotkeys
-      if (['cancelEdit', 'saveNote', 'escape'].includes(hotkey.action)) {
+      if (['cancelEdit', 'saveNote', 'escape', 'toggleHotkeyHints'].includes(hotkey.action)) {
         event.preventDefault();
         event.stopPropagation();
 

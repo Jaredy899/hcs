@@ -15,7 +15,7 @@ const DEFAULT_HOTKEYS: HotkeyConfig[] = [
   { key: '/', action: 'focusSearch' },
   { key: 'Escape', action: 'escape' },
   { key: 'n', ctrlKey: true, shiftKey: true, action: 'addClient' },
-  { key: '?', action: 'showHelp' },
+  { key: 'h', ctrlKey: true, action: 'showHelp' },
   { key: 's', ctrlKey: true, shiftKey: true, action: 'toggleStickyNotes' },
   { key: 'k', ctrlKey: true, shiftKey: true, action: 'newStickyNote' },
   { key: 'c', altKey: true, action: 'toggleCompactMode' },
@@ -92,6 +92,9 @@ export function useGlobalHotkeys({
               switch (hotkey.action) {
                 case 'addClient':
                   onAddClient?.();
+                  break;
+                case 'showHelp':
+                  onShowHelp?.();
                   break;
                 case 'toggleStickyNotes':
                   onToggleStickyNotes?.();
