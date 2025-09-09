@@ -44,9 +44,9 @@ const CLIENT_DETAILS_HOTKEYS: HotkeyConfig[] = [
   { key: 'a', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'archiveClient', description: 'Archive Client' },
   { key: 'b', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'closeModal', description: 'Go Back' },
   { key: 'c', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'focusContactSection', description: 'Focus Contact Section' },
-  { key: 's', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'focusStatusSection', description: 'Focus Status Section' },
-  { key: 'o', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'focusTodoSection', description: 'Focus Todo Section' },
-  { key: 'n', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'focusNotesSection', description: 'Focus Notes Section' },
+  { key: 'u', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'focusStatusSection', description: 'Focus Status Section' },
+  { key: 'd', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'focusTodoSection', description: 'Focus Todo Section' },
+  { key: 'o', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'focusNotesSection', description: 'Focus Notes Section' },
   { key: 'h', [isMac ? 'ctrlKey' : 'altKey']: true, action: 'toggleHotkeyHints', description: 'Toggle Hotkey Hints' },
   { key: 'Escape', [isMac ? 'ctrlKey' : 'altKey']: false, action: 'escape', description: 'Cancel Editing or Close Modal' },
 ];

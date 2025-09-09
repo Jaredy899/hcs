@@ -103,17 +103,13 @@ export function usePendingChanges() {
   const syncChanges = useCallback(async () => {
     if (pendingChanges.length === 0) return;
 
-    console.log('Syncing changes:', pendingChanges);
-
     try {
       // Process all changes sequentially to better handle errors
       for (const change of pendingChanges) {
         try {
           if (change.type === "todo") {
-            console.log('Syncing todo change:', change);
             await toggleTodo({ id: change.id, completed: change.completed });
           } else if (change.type === "contact" || change.type === "date") {
-            console.log('Syncing contact/date change:', change);
             await updateContact({
               id: change.clientId,
               field: change.field,
@@ -121,15 +117,12 @@ export function usePendingChanges() {
             });
           }
         } catch (changeError) {
-          console.error(`Failed to sync individual change:`, change, changeError);
           throw new Error(`Failed to sync ${change.type} change: ${changeError}`);
         }
       }
 
-      console.log('All changes synced successfully');
       setPendingChanges([]);
     } catch (error) {
-      console.error("Failed to sync changes:", error);
       // Keep the changes in case user wants to retry
       throw error;
     }

@@ -22,9 +22,9 @@ This application supports several keyboard shortcuts to help you navigate more e
 - **`Ctrl+N` (Mac) / `Alt+N` (Windows/Linux)** - Focus add todo input
 - **`Ctrl+M` (Mac) / `Alt+M` (Windows/Linux)** - Focus add note textarea
 - **`Ctrl+C` (Mac) / `Alt+C` (Windows/Linux)** - Focus contact section
-- **`Ctrl+S` (Mac) / `Alt+S` (Windows/Linux)** - Focus status section
-- **`Ctrl+O` (Mac) / `Alt+O` (Windows/Linux)** - Focus todo section
-- **`Ctrl+N` (Mac) / `Alt+N` (Windows/Linux)** - Focus notes section
+- **`Ctrl+U` (Mac) / `Alt+U` (Windows/Linux)** - Focus status section
+- **`Ctrl+D` (Mac) / `Alt+D` (Windows/Linux)** - Focus todo section
+- **`Ctrl+O` (Mac) / `Alt+O` (Windows/Linux)** - Focus notes section
 - **`Ctrl+A` (Mac) / `Alt+A` (Windows/Linux)** - Archive client
 - **`Ctrl+B` (Mac) / `Alt+B` (Windows/Linux)** - Go back to client list
 - **`Escape`** - Cancel editing or close modal

@@ -41,7 +41,6 @@ export const TodoSection = forwardRef<HTMLDivElement, TodoSectionProps>(
   };
 
   const handleToggleTodo = (todoId: Id<"todos">, newCompleted: boolean) => {
-    console.log('Setting todo completion:', { id: todoId, completed: newCompleted });
     pendingChanges.addTodoChange(todoId, newCompleted);
   };
 
@@ -78,13 +77,6 @@ export const TodoSection = forwardRef<HTMLDivElement, TodoSectionProps>(
           const selectedTodo = todos.find(todo => todo._id === selectedTodoId);
           if (selectedTodo) {
             const currentCompleted = pendingChanges.getTodoState(selectedTodo._id, selectedTodo.completed);
-            console.log('Toggling todo:', {
-              id: selectedTodo._id,
-              text: selectedTodo.text,
-              originalCompleted: selectedTodo.completed,
-              currentCompleted,
-              newCompleted: !currentCompleted
-            });
             handleToggleTodo(selectedTodo._id, !currentCompleted); // Pass the new state directly
           }
         }
