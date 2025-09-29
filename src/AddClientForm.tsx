@@ -49,11 +49,11 @@ export default function AddClientForm({ onClose }: { onClose: () => void }) {
   });
   const [autoFilledFromLookup, setAutoFilledFromLookup] = useState(false);
 
-  // Trigger lookup when exactly 6 digits are entered
-  const isSixDigits = formData.clientId.length === 6;
+  // Trigger lookup when Consumer ID is entered (any length)
+  const hasClientId = formData.clientId.length > 0;
   const existingClient = useQuery(
     api.clients.getByClientId,
-    isSixDigits ? { clientId: formData.clientId } : "skip"
+    hasClientId ? { clientId: formData.clientId } : "skip"
   );
 
   useEffect(() => {
@@ -145,23 +145,19 @@ export default function AddClientForm({ onClose }: { onClose: () => void }) {
               <Input
                 type="text"
                 id="clientId"
-                inputMode="numeric"
-                pattern="\\d{6}"
-                maxLength={6}
                 autoFocus
                 value={formData.clientId}
                 onChange={(e) => {
-                  const digitsOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
-                  setFormData({ ...formData, clientId: digitsOnly });
+                  setFormData({ ...formData, clientId: e.target.value });
                   setAutoFilledFromLookup(false);
                 }}
                 required
               />
               <p className="text-xs text-muted-foreground">
-                {formData.clientId.length < 6 && "Enter 6-digit Consumer ID to check for existing record"}
-                {formData.clientId.length === 6 && existingClient === undefined && "Looking up consumer..."}
-                {formData.clientId.length === 6 && existingClient === null && "No existing consumer found. Continue entering details."}
-                {formData.clientId.length === 6 && existingClient && "Found existing consumer. Details auto-filled."}
+                {formData.clientId.length === 0 && "Enter Consumer ID to check for existing record"}
+                {formData.clientId.length > 0 && existingClient === undefined && "Looking up consumer..."}
+                {formData.clientId.length > 0 && existingClient === null && "No existing consumer found. Continue entering details."}
+                {formData.clientId.length > 0 && existingClient && "Found existing consumer. Details auto-filled."}
               </p>
             </div>
 
@@ -202,7 +198,7 @@ export default function AddClientForm({ onClose }: { onClose: () => void }) {
             <Button
               type="submit"
               className="w-full"
-              disabled={!formData.name || !formData.phoneNumber || formData.clientId.length !== 6}
+              disabled={!formData.name || !formData.phoneNumber || !formData.clientId}
             >
               Add Consumer
             </Button>
