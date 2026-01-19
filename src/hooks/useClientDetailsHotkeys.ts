@@ -123,8 +123,9 @@ export function useClientDetailsHotkeys({
 
     if (!hotkey) return;
 
-    // When in input, only allow escape
-    if (isInInput && hotkey.action !== 'escape') return;
+    // When in input, don't intercept any hotkeys - let element-level handlers take over
+    // This allows Escape to clear/blur inputs instead of closing the modal
+    if (isInInput) return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -148,13 +149,15 @@ export function useClientDetailsHotkeys({
       setIsEditing(!!isInInput);
     };
 
+    const handleFocusOut = () => setTimeout(handleFocusChange, 10);
+
     document.addEventListener('focusin', handleFocusChange);
-    document.addEventListener('focusout', () => setTimeout(handleFocusChange, 10));
+    document.addEventListener('focusout', handleFocusOut);
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown, { capture: true });
       document.removeEventListener('focusin', handleFocusChange);
-      document.removeEventListener('focusout', () => {});
+      document.removeEventListener('focusout', handleFocusOut);
     };
   }, [handleKeyDown]);
 
