@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit, Save, X, Plus, Palette } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useDraggable } from "../hooks/useDraggable";
+import { formatShortDateTime } from "@/lib/dateUtils";
 
 interface StickyNoteData {
   _id: Id<"stickyNotes">;
@@ -38,18 +40,11 @@ export function StickyNotes({ showStickyNotes, onCreateNote, onHideNotes }: Stic
   const updateStickyNote = useMutation(api.stickyNotes.update);
   const deleteStickyNote = useMutation(api.stickyNotes.remove);
 
-  if (!showStickyNotes) {
-    return null;
-  }
+  if (!showStickyNotes) return null;
 
   return (
     <>
-      {/* Overlay to detect clicks outside notes */}
-      <div 
-        className="fixed inset-0 z-30"
-        onClick={onHideNotes}
-      />
-      
+      <div className="fixed inset-0 z-30" onClick={onHideNotes} />
       {stickyNotes.map((note) => (
         <StickyNoteCard
           key={note._id}
@@ -73,68 +68,26 @@ interface StickyNoteCardProps {
 function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCardProps) {
   const [isEditing, setIsEditing] = useState(note.text === "");
   const [editText, setEditText] = useState(note.text);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // Allow dragging even during editing, but only if clicking on non-input areas
-    const target = e.target as HTMLElement;
-    if (isEditing && (target.tagName === 'TEXTAREA' || target.closest('button'))) {
-      return;
-    }
-    
-    setIsDragging(true);
-    const rect = cardRef.current?.getBoundingClientRect();
-    if (rect) {
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      });
-    }
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
-    
-    const x = e.clientX - dragOffset.x;
-    const y = e.clientY - dragOffset.y;
-    
-    // Keep note within viewport bounds
-    const maxX = window.innerWidth - 250;
-    const maxY = window.innerHeight - 150;
-    
-    const clampedX = Math.max(0, Math.min(maxX, x));
-    const clampedY = Math.max(0, Math.min(maxY, y));
-    
-    onUpdate({
-      id: note._id,
-      position: { x: clampedX, y: clampedY },
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-    }
-  }, [isDragging, dragOffset]);
+  // Use shared draggable hook
+  const { isDragging, handleMouseDown } = useDraggable({
+    elementRef: cardRef,
+    onMove: (x, y) => onUpdate({ id: note._id, position: { x, y } }),
+    bounds: {
+      minX: 0,
+      maxX: window.innerWidth - 250,
+      minY: 0,
+      maxY: window.innerHeight - 150,
+    },
+  });
 
   // Auto-save when clicking outside the note
   useEffect(() => {
     if (!isEditing) return;
     
     const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (cardRef.current && !cardRef.current.contains(target)) {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
         saveEdit();
       }
     };
@@ -150,7 +103,6 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
 
   const saveEdit = async () => {
     if (!editText.trim()) {
-      // Delete empty notes
       await onDelete({ id: note._id });
       return;
     }
@@ -163,16 +115,14 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
     setEditText(note.text);
   };
 
-  const handleColorChange = async (color: string) => {
-    await onUpdate({ id: note._id, color });
+  const handleColorChange = (color: string) => {
+    onUpdate({ id: note._id, color });
   };
 
   return (
     <Card
       ref={cardRef}
-      className={`fixed w-64 shadow-lg cursor-move select-none z-40 ${
-        isDragging ? "opacity-80" : ""
-      }`}
+      className={`fixed w-64 shadow-lg cursor-move select-none z-40 ${isDragging ? "opacity-80" : ""}`}
       style={{
         left: note.position.x,
         top: note.position.y,
@@ -182,13 +132,11 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
       onClick={(e) => e.stopPropagation()}
     >
       <div className="p-3">
-                <div className="flex justify-between items-start mb-2">
+        {/* Toolbar */}
+        <div className="flex justify-between items-start mb-2">
           <div className="flex gap-1">
             <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                onCreateNote();
-              }}
+              onClick={(e) => { e.stopPropagation(); onCreateNote(); }}
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0 bg-white/70 hover:bg-white/90 text-gray-700 hover:text-gray-900"
@@ -221,33 +169,28 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
             </Popover>
           </div>
           <div className="flex gap-1">
-                         {!isEditing && (
-               <Button
-                 onClick={(e) => {
-                   e.stopPropagation();
-                   startEditing();
-                 }}
-                 variant="ghost"
-                 size="sm"
-                 className="h-6 w-6 p-0 bg-white/70 hover:bg-white/90 text-gray-700 hover:text-gray-900"
-               >
-                 <Edit className="h-3 w-3" />
-               </Button>
-             )}
-             <Button
-               onClick={(e) => {
-                 e.stopPropagation();
-                 onDelete({ id: note._id });
-               }}
-               variant="ghost"
-               size="sm"
-               className="h-6 w-6 p-0 bg-white/70 hover:bg-white/90 text-red-600 hover:text-red-700"
-             >
-               <Trash2 className="h-3 w-3" />
-             </Button>
+            {!isEditing && (
+              <Button
+                onClick={(e) => { e.stopPropagation(); startEditing(); }}
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 bg-white/70 hover:bg-white/90 text-gray-700 hover:text-gray-900"
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+            )}
+            <Button
+              onClick={(e) => { e.stopPropagation(); onDelete({ id: note._id }); }}
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 bg-white/70 hover:bg-white/90 text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
           </div>
         </div>
 
+        {/* Content */}
         {isEditing ? (
           <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
             <Textarea
@@ -266,40 +209,35 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
                 }
               }}
             />
-                         <div className="flex gap-1">
-               <Button
-                 onClick={saveEdit}
-                 size="sm"
-                 className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
-               >
-                 <Save className="h-3 w-3 mr-1" />
-                 Save
-               </Button>
-               <Button
-                 onClick={cancelEdit}
-                 variant="outline"
-                 size="sm"
-                 className="h-6 px-2 text-xs bg-white/90 border-gray-400 text-gray-700 hover:bg-white hover:text-gray-900"
-               >
-                 <X className="h-3 w-3 mr-1" />
-                 Cancel
-               </Button>
-             </div>
+            <div className="flex gap-1">
+              <Button
+                onClick={saveEdit}
+                size="sm"
+                className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Save className="h-3 w-3 mr-1" />
+                Save
+              </Button>
+              <Button
+                onClick={cancelEdit}
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 text-xs bg-white/90 border-gray-400 text-gray-700 hover:bg-white hover:text-gray-900"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Cancel
+              </Button>
+            </div>
           </div>
         ) : (
           <div>
             <p className="text-sm whitespace-pre-wrap text-gray-900">{note.text}</p>
             <p className="text-xs text-gray-600 mt-2">
-              {new Date(note.updatedAt).toLocaleDateString(undefined, {
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              {formatShortDateTime(note.updatedAt)}
             </p>
           </div>
         )}
       </div>
     </Card>
   );
-} 
+}
