@@ -1,8 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Detect platform
 export const isMac = typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('mac');
 export const getModifierKeyName = () => isMac ? 'Ctrl' : 'Alt';
+
+/** True when the element accepts typed text, so hotkeys should stay out of the way. */
+export function isEditableElement(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return (
+    target.tagName === 'INPUT' ||
+    target.tagName === 'TEXTAREA' ||
+    target.isContentEditable ||
+    target.closest('[contenteditable="true"]') !== null
+  );
+}
 
 export type ClientDetailsHotkeyAction =
   | 'setLastContactToday'
@@ -45,7 +56,7 @@ const CLIENT_DETAILS_HOTKEYS: HotkeyConfig[] = [
   { key: 'Escape', useModifier: false, action: 'escape', description: 'Cancel Editing or Close Modal' },
 ];
 
-interface UseClientDetailsHotkeysOptions {
+interface HotkeyHandlers {
   onSetLastContactToday?: () => void;
   onSetFaceToFaceToday?: () => void;
   onToggleFirstContact?: () => void;
@@ -59,111 +70,85 @@ interface UseClientDetailsHotkeysOptions {
   onFocusTodoSection?: () => void;
   onFocusNotesSection?: () => void;
   onEscape?: () => void;
+}
+
+interface UseClientDetailsHotkeysOptions extends HotkeyHandlers {
   enabled?: boolean;
 }
 
-export function useClientDetailsHotkeys({
-  onSetLastContactToday,
-  onSetFaceToFaceToday,
-  onToggleFirstContact,
-  onToggleSecondContact,
-  onFocusAddTodo,
-  onFocusAddNote,
-  onArchiveClient,
-  onCloseModal,
-  onFocusContactSection,
-  onFocusStatusSection,
-  onFocusTodoSection,
-  onFocusNotesSection,
-  onEscape,
-  enabled = true,
-}: UseClientDetailsHotkeysOptions = {}) {
+// Maps each hotkey action to the option that handles it. `toggleHotkeyHints` is
+// handled internally and has no caller-provided handler.
+const HANDLER_FOR_ACTION: Record<Exclude<ClientDetailsHotkeyAction, 'toggleHotkeyHints'>, keyof HotkeyHandlers> = {
+  setLastContactToday: 'onSetLastContactToday',
+  setFaceToFaceToday: 'onSetFaceToFaceToday',
+  toggleFirstContact: 'onToggleFirstContact',
+  toggleSecondContact: 'onToggleSecondContact',
+  focusAddTodo: 'onFocusAddTodo',
+  focusAddNote: 'onFocusAddNote',
+  archiveClient: 'onArchiveClient',
+  closeModal: 'onCloseModal',
+  focusContactSection: 'onFocusContactSection',
+  focusStatusSection: 'onFocusStatusSection',
+  focusTodoSection: 'onFocusTodoSection',
+  focusNotesSection: 'onFocusNotesSection',
+  escape: 'onEscape',
+};
+
+export function useClientDetailsHotkeys({ enabled = true, ...handlers }: UseClientDetailsHotkeysOptions = {}) {
   const [isEditing, setIsEditing] = useState(false);
   const [showHotkeyHints, setShowHotkeyHints] = useState(false);
 
-  // Map actions to handlers
-  const actionHandlers: Record<ClientDetailsHotkeyAction, (() => void) | undefined> = {
-    setLastContactToday: onSetLastContactToday,
-    setFaceToFaceToday: onSetFaceToFaceToday,
-    toggleFirstContact: onToggleFirstContact,
-    toggleSecondContact: onToggleSecondContact,
-    focusAddTodo: onFocusAddTodo,
-    focusAddNote: onFocusAddNote,
-    archiveClient: onArchiveClient,
-    closeModal: onCloseModal,
-    focusContactSection: onFocusContactSection,
-    focusStatusSection: onFocusStatusSection,
-    focusTodoSection: onFocusTodoSection,
-    focusNotesSection: onFocusNotesSection,
-    escape: onEscape,
-    toggleHotkeyHints: () => setShowHotkeyHints(prev => !prev),
-  };
-
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (!enabled) return;
-
-    const target = event.target as HTMLElement;
-    const isInInput = (
-      target.tagName === 'INPUT' ||
-      target.tagName === 'TEXTAREA' ||
-      target.contentEditable === 'true' ||
-      target.closest('[contenteditable="true"]')
-    );
-
-    setIsEditing(!!isInInput);
-
-    // Find matching hotkey
-    const hotkey = CLIENT_DETAILS_HOTKEYS.find(h => {
-      const keyMatches = event.key.toLowerCase() === h.key.toLowerCase();
-      const modifierMatches = h.useModifier
-        ? (isMac ? event.ctrlKey : event.altKey)
-        : (!event.ctrlKey && !event.altKey);
-      return keyMatches && modifierMatches;
-    });
-
-    if (!hotkey) return;
-
-    // When in input, don't intercept any hotkeys - let element-level handlers take over
-    // This allows Escape to clear/blur inputs instead of closing the modal
-    if (isInInput) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const handler = actionHandlers[hotkey.action];
-    handler?.();
-  }, [enabled, actionHandlers]);
+  // Handlers are re-created on every render of the caller, so keep them in a ref
+  // to avoid re-registering the document listeners on each render.
+  const handlersRef = useRef(handlers);
+  useEffect(() => {
+    handlersRef.current = handlers;
+  });
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown, { capture: true });
+    if (!enabled) return;
 
-    // Track editing state via focus events
-    const handleFocusChange = () => {
-      const target = document.activeElement as HTMLElement;
-      const isInInput = (
-        target?.tagName === 'INPUT' ||
-        target?.tagName === 'TEXTAREA' ||
-        target?.contentEditable === 'true' ||
-        target?.closest('[contenteditable="true"]')
-      );
-      setIsEditing(!!isInInput);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const hotkey = CLIENT_DETAILS_HOTKEYS.find((h) => {
+        if (event.key.toLowerCase() !== h.key.toLowerCase()) return false;
+        if (event.shiftKey) return false;
+        return h.useModifier
+          ? (isMac ? event.ctrlKey : event.altKey)
+          : (!event.ctrlKey && !event.altKey && !event.metaKey);
+      });
+
+      if (!hotkey) return;
+
+      // While typing, let element-level handlers take over so Escape can clear or
+      // blur the field instead of closing the modal.
+      if (isEditableElement(event.target)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (hotkey.action === 'toggleHotkeyHints') {
+        setShowHotkeyHints((prev) => !prev);
+        return;
+      }
+
+      handlersRef.current[HANDLER_FOR_ACTION[hotkey.action]]?.();
     };
 
-    const handleFocusOut = () => setTimeout(handleFocusChange, 10);
+    // `focusout` fires before the next element is focused, so read `relatedTarget`
+    // (the element about to receive focus) rather than `document.activeElement`.
+    const handleFocusIn = (event: FocusEvent) => setIsEditing(isEditableElement(event.target));
+    const handleFocusOut = (event: FocusEvent) => setIsEditing(isEditableElement(event.relatedTarget));
 
-    document.addEventListener('focusin', handleFocusChange);
+    document.addEventListener('keydown', handleKeyDown, { capture: true });
+    document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('focusout', handleFocusOut);
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown, { capture: true });
-      document.removeEventListener('focusin', handleFocusChange);
+      document.removeEventListener('focusin', handleFocusIn);
       document.removeEventListener('focusout', handleFocusOut);
     };
-  }, [handleKeyDown]);
+  }, [enabled]);
 
-  return {
-    hotkeys: CLIENT_DETAILS_HOTKEYS,
-    isEditing,
-    showHotkeyHints,
-  };
+  return { isEditing, showHotkeyHints };
 }

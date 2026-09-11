@@ -1,84 +1,69 @@
 # Keyboard Shortcuts
 
-This application supports several keyboard shortcuts to help you navigate more efficiently:
+This application supports several keyboard shortcuts to help you navigate more efficiently.
 
-## Search Navigation
+On Mac the modifier is `Ctrl`; on Windows/Linux it is `Alt`. Shortcuts written below as
+`Ctrl/Alt` follow that rule. Shortcuts written as `Ctrl+Shift` use `Ctrl+Shift` on every
+platform.
+
+## Global (caseload list)
 
 - **`/`** - Focus the search input
-- **`Enter`** - When search has exactly one result, select that client
-- **`Escape`** - Clear search, close current modal/client, or hide sticky notes
+- **`Enter`** - When the search has exactly one result, open that consumer
+- **`Escape`** - Clear search, close the current modal, or hide sticky notes
+- **`Ctrl+Shift+N`** - Add new consumer
+- **`Ctrl+Shift+S`** - Toggle sticky notes visibility
+- **`Ctrl+Shift+K`** - Create new sticky note (shows sticky notes if hidden)
+- **`Ctrl/Alt+C`** - Toggle compact view
+- **`Ctrl+H`** - Toggle the keyboard shortcuts help modal
 
-## Client Management
+## Consumer details
 
-- **`Ctrl+N` (Mac) / `Alt+N` (Windows/Linux)** - Add new consumer (when on main list)
+- **`Ctrl/Alt+H`** - Toggle hotkey hints inside the consumer details modal (off by default)
+- **`Ctrl/Alt+T`** - Set last contact to today
+- **`Ctrl/Alt+F`** - Set last face-to-face to today
+- **`Ctrl/Alt+1`** - Toggle first contact status
+- **`Ctrl/Alt+2`** - Toggle second contact status
+- **`Ctrl/Alt+N`** - Focus add todo input
+- **`Ctrl/Alt+M`** - Focus add note textarea
+- **`Ctrl/Alt+C`** - Scroll to contact section
+- **`Ctrl/Alt+U`** - Scroll to status section
+- **`Ctrl/Alt+D`** - Scroll to todo section
+- **`Ctrl/Alt+O`** - Scroll to notes section
+- **`Ctrl/Alt+A`** - Archive consumer
+- **`Ctrl/Alt+B`** - Save pending changes and go back to the caseload
+- **`Escape`** - Cancel the field you are editing, or save and close the modal
 
-## Client Details Hotkeys
+## Todo and note lists
 
-- **`Ctrl+H` (Mac) / `Alt+H` (Windows/Linux)** - Toggle hotkey hints visibility in client details modal (off by default)
-- **`Ctrl+T` (Mac) / `Alt+T` (Windows/Linux)** - Set last contact to today
-- **`Ctrl+F` (Mac) / `Alt+F` (Windows/Linux)** - Set last face-to-face to today
-- **`Ctrl+1` (Mac) / `Alt+1` (Windows/Linux)** - Toggle first contact status
-- **`Ctrl+2` (Mac) / `Alt+2` (Windows/Linux)** - Toggle second contact status
-- **`Ctrl+N` (Mac) / `Alt+N` (Windows/Linux)** - Focus add todo input
-- **`Ctrl+M` (Mac) / `Alt+M` (Windows/Linux)** - Focus add note textarea
-- **`Ctrl+C` (Mac) / `Alt+C` (Windows/Linux)** - Focus contact section
-- **`Ctrl+U` (Mac) / `Alt+U` (Windows/Linux)** - Focus status section
-- **`Ctrl+D` (Mac) / `Alt+D` (Windows/Linux)** - Focus todo section
-- **`Ctrl+O` (Mac) / `Alt+O` (Windows/Linux)** - Focus notes section
-- **`Ctrl+A` (Mac) / `Alt+A` (Windows/Linux)** - Archive client
-- **`Ctrl+B` (Mac) / `Alt+B` (Windows/Linux)** - Go back to client list
-- **`Escape`** - Cancel editing or close modal
+When a todo or note card has focus:
 
-## Sticky Notes
+- **`↑` / `↓`** - Move the selection
+- **`Space`** - Toggle the selected todo
+- **`Enter`** - Edit the selected note
+- **`Delete` / `Backspace`** - Delete the selected item
+- **`Escape`** - Clear the selection
 
-- **`Ctrl+S` (Mac) / `Alt+S` (Windows/Linux)** - Toggle sticky notes visibility
-- **`Ctrl+K` (Mac) / `Alt+K` (Windows/Linux)** - Create new sticky note (shows sticky notes if hidden)
+## Behaviour notes
 
-## View Controls
+- **Input-safe hotkeys**: modifier shortcuts work even while typing in search or form
+  fields. Plain-key shortcuts such as `/` are ignored while typing.
+- **Escape while typing** cancels or clears the field and blurs it; it does not close the
+  consumer details modal, so pending changes are never dropped by accident.
+- **Escape priority**: help modal, then add consumer form, then consumer details, then
+  sticky notes, then the caseload list.
+- **Consumer details owns Escape**: closing that modal always tries to save pending
+  changes first and reports a failure rather than discarding them silently.
 
-- **`Ctrl+C` (Mac) / `Alt+C` (Windows/Linux)** - Toggle compact view
+## Implementation
 
-## Help & Navigation
+- `src/hooks/useGlobalHotkeys.ts` - app-wide shortcuts. `GLOBAL_HOTKEYS` is the single
+  source of truth and also drives the help modal, so a new entry appears there
+  automatically.
+- `src/hooks/useClientDetailsHotkeys.ts` - shortcuts active inside the consumer details
+  modal, plus the shared `isEditableElement` check used by both hooks.
+- `src/hooks/useListNavigation.ts` - arrow-key navigation inside the todo and note lists.
 
-- **`Ctrl+H` (Mac) / `Alt+H` (Windows/Linux)** - Toggle keyboard shortcuts help modal
-- **`Escape`** - Close any open modal, go back to previous view, or hide sticky notes
-
-## Browser-Friendly Design
-
-The hotkey system has been designed to avoid conflicts with common browser shortcuts and AutoHotkey remapping:
-
-- **Cross-platform modifier keys**: Uses `Ctrl` on Mac and `Alt` on Windows/Linux to avoid conflicts
-- **Compatible with AutoHotkey Alt remapping** on Windows/Linux systems
-- **Escape key** provides consistent "back" navigation through the app hierarchy
-
-## Implementation Details
-
-The hotkey system is implemented using
-
-- `useGlobalHotkeys` custom hook for managing keyboard event listeners
-- Global event listeners that respect input focus states
-- Cross-platform support with browser-friendly key combinations
-
-### Features
-
-- **Smart Context Awareness**: Simple hotkeys (/) are disabled when typing in inputs, but modifier-based hotkeys work in all contexts
-- **Modal Hierarchy**: Escape key respects modal stack (help → add client → client details → sticky notes → main list)
-- **Simple Search**: Press `/` to quickly focus and select the search input
-- **Visual Feedback**: Help modal shows all available shortcuts and can be toggled with the same hotkey
-- **Accessibility**: Keyboard-only navigation support
-- **Sticky Notes Integration**: Full keyboard control for note management
-- **Input-Safe Hotkeys**: Modifier shortcuts work even when typing in search or form fields (including help hotkey `Ctrl+H`/`Alt+H`)
-- **Cross-Platform**: Automatically adapts to Mac (Ctrl) vs Windows/Linux (Alt) conventions
-- **Hotkey Hint Toggle**: Press `Ctrl+H`/`Alt+H` to show/hide hotkey hints in client details modal (off by default for cleaner interface)
-
-### Hotkey Priority Order (Escape)
-
-1. Close help modal (if open)
-2. Close add client form (if open)  
-3. Close client details (if open)
-4. Hide sticky notes (if visible)
-5. Return to main list
-
-### Adding New Hotkeys
-
-To add new hotkeys, update the `getDefaultHotkeys()` function in `src/hooks/useGlobalHotkeys.ts` and add the corresponding action handler. Use `[isMac ? 'ctrlKey' : 'altKey']: true` for cross-platform modifier keys.
+To add a shortcut, append to `GLOBAL_HOTKEYS` (or `CLIENT_DETAILS_HOTKEYS`), add the
+action to the `HotkeyAction` union, and map it to a handler option in
+`HANDLER_FOR_ACTION`. Set `useModifier: true` for a cross-platform `Ctrl`/`Alt` shortcut.

@@ -2,6 +2,23 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
+// Packages that get their own chunk, keyed by chunk name.
+const CHUNK_GROUPS: Record<string, string[]> = {
+  // React and its runtime
+  vendor: ["react", "react-dom", "scheduler"],
+  auth: ["@clerk/clerk-react"],
+  convex: ["convex"],
+  ui: [
+    "@radix-ui/react-popover",
+    "@radix-ui/react-select",
+    "@radix-ui/react-checkbox",
+    "@radix-ui/react-label",
+    "@radix-ui/react-slot",
+  ],
+  date: ["date-fns", "@daypicker/react"],
+  utils: ["clsx", "class-variance-authority", "tailwind-merge", "lucide-react"],
+};
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   base: '/',
@@ -37,7 +54,7 @@ window.addEventListener('message', async (message) => {
   ].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   build: {
@@ -45,29 +62,15 @@ window.addEventListener('message', async (message) => {
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
-        // Manual chunking to split large dependencies
-        manualChunks: {
-          // Vendor chunk for React and related libraries
-          vendor: ['react', 'react-dom'],
-          // Authentication chunk
-          auth: ['@clerk/clerk-react'],
-          // Convex chunk
-          convex: ['convex/react'],
-          // UI components chunk
-          ui: [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-select',
-            '@radix-ui/react-checkbox',
-            '@radix-ui/react-label',
-            '@radix-ui/react-slot'
-          ],
-          // Date utilities chunk
-          date: ['date-fns', 'react-day-picker'],
-          // Form utilities chunk
-          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
-          // Utility libraries
-          utils: ['clsx', 'class-variance-authority', 'tailwind-merge', 'lucide-react']
+        // Split large dependencies into their own chunks. Rolldown only
+        // accepts the function form.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          for (const [chunk, packages] of Object.entries(CHUNK_GROUPS)) {
+            if (packages.some((pkg) => id.includes(`node_modules/${pkg}/`))) {
+              return chunk;
+            }
+          }
         },
       },
     },

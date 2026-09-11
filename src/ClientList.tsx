@@ -1,46 +1,98 @@
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
-import { useState, KeyboardEvent, useEffect, useRef } from "react";
+import { useMemo, useState, KeyboardEvent } from "react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
-import { ClientRow } from "@/components/ClientRow";
+import { Archive, Users } from "lucide-react";
+import { ClientRow, ClientData } from "@/components/ClientRow";
+import { ClientFilters } from "@/components/ClientFilters";
+import { CaseloadFilter, CASELOAD_FILTERS } from "@/lib/caseloadFilters";
+import { getCaseloadFlags, getUpcomingDates, FACE_TO_FACE_MAX_DAYS } from "@/lib/dateUtils";
 
 interface ClientListProps {
-  selectedClientId: Id<"clients"> | null;
   onSelectClient: (id: Id<"clients">) => void;
-  onCloseClient: () => void;
   isCompactMode: boolean;
 }
 
-type SortColumn = 'name' | 'annualAssessment' | 'lastContact' | 'lastF2F' | 'nextF2F';
+type SortColumn = 'name' | 'nextQR' | 'lastContact' | 'lastF2F' | 'nextF2F';
 type SortDirection = 'asc' | 'desc';
 type NameSortBy = 'first' | 'last';
 
-export function ClientList({
-  selectedClientId,
-  onSelectClient,
-  onCloseClient,
-  isCompactMode,
-}: ClientListProps) {
-  const clients = useQuery(api.clients.list) || [];
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+function compareClients(a: ClientData, b: ClientData, column: SortColumn, nameSortBy: NameSortBy): number {
+  switch (column) {
+    case 'name': {
+      const namePart = (name: string) => {
+        const parts = name.split(' ');
+        return nameSortBy === 'first' ? parts[0] : parts[parts.length - 1];
+      };
+      return namePart(a.name).localeCompare(namePart(b.name));
+    }
+    case 'nextQR':
+      return getUpcomingDates(a).nextQRDate.getTime() - getUpcomingDates(b).nextQRDate.getTime();
+    case 'lastContact':
+      return (a.lastContactDate ?? 0) - (b.lastContactDate ?? 0);
+    case 'lastF2F':
+      return (a.lastFaceToFaceDate ?? 0) - (b.lastFaceToFaceDate ?? 0);
+    case 'nextF2F': {
+      const nextDue = (client: ClientData) =>
+        client.lastFaceToFaceDate ? client.lastFaceToFaceDate + FACE_TO_FACE_MAX_DAYS * DAY_MS : 0;
+      return nextDue(a) - nextDue(b);
+    }
+  }
+}
+
+export function ClientList({ onSelectClient, isCompactMode }: ClientListProps) {
+  const [showArchived, setShowArchived] = useState(false);
+  const activeClients = useQuery(api.clients.list) || [];
+  const archivedClients = useQuery(api.clients.listArchived, showArchived ? {} : "skip") || [];
   const todoCounts = useQuery(api.todos.getClientTodoCounts) || {};
-  
-  const [sortBy, setSortBy] = useState<NameSortBy>('last');
+  const unarchiveClient = useMutation(api.clients.unarchive);
+
+  const [nameSortBy, setNameSortBy] = useState<NameSortBy>('last');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [activeFilters, setActiveFilters] = useState<CaseloadFilter[]>([]);
 
-  // Clear search when client is deselected
-  useEffect(() => {
-    if (!selectedClientId) {
-      setSearchTerm('');
-      searchInputRef.current?.focus();
+  const clients: ClientData[] = showArchived ? archivedClients : activeClients;
+
+  const filterCounts = useMemo(() => {
+    const counts = Object.fromEntries(
+      CASELOAD_FILTERS.map((filter) => [filter.key, 0])
+    ) as Record<CaseloadFilter, number>;
+
+    for (const client of clients) {
+      const flags = getCaseloadFlags(client);
+      for (const filter of CASELOAD_FILTERS) {
+        if (flags[filter.key]) counts[filter.key] += 1;
+      }
     }
-  }, [selectedClientId]);
+    return counts;
+  }, [clients]);
+
+  const visibleClients = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return clients
+      .filter((client) => {
+        if (query && !client.name.toLowerCase().includes(query)) return false;
+        if (activeFilters.length === 0) return true;
+        const flags = getCaseloadFlags(client);
+        return activeFilters.every((filter) => flags[filter]);
+      })
+      .sort((a, b) => {
+        const comparison = compareClients(a, b, sortColumn, nameSortBy);
+        return sortDirection === 'asc' ? comparison : -comparison;
+      });
+  }, [clients, searchTerm, activeFilters, sortColumn, sortDirection, nameSortBy]);
 
   const handleColumnSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -51,115 +103,66 @@ export function ClientList({
     }
   };
 
-  // Sort clients
-  const sortedClients = [...clients].sort((a, b) => {
-    let comparison = 0;
-    
-    switch (sortColumn) {
-      case 'name': {
-        const aName = a.name.split(' ');
-        const bName = b.name.split(' ');
-        if (sortBy === 'first') {
-          comparison = aName[0].localeCompare(bName[0]);
-        } else {
-          comparison = aName[aName.length - 1].localeCompare(bName[bName.length - 1]);
-        }
-        break;
-      }
-      case 'annualAssessment':
-        comparison = (a.nextAnnualAssessment || 0) - (b.nextAnnualAssessment || 0);
-        break;
-      case 'lastContact':
-        comparison = (a.lastContactDate || 0) - (b.lastContactDate || 0);
-        break;
-      case 'lastF2F':
-        comparison = (a.lastFaceToFaceDate || 0) - (b.lastFaceToFaceDate || 0);
-        break;
-      case 'nextF2F': {
-        const aNextF2F = a.lastFaceToFaceDate ? a.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000) : 0;
-        const bNextF2F = b.lastFaceToFaceDate ? b.lastFaceToFaceDate + (90 * 24 * 60 * 60 * 1000) : 0;
-        comparison = aNextF2F - bNextF2F;
-        break;
-      }
-    }
-    
-    return sortDirection === 'asc' ? comparison : -comparison;
-  });
-
-  // Filter clients
-  const filteredClients = sortedClients.filter(client => 
-    client.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && filteredClients.length === 1) {
-      onSelectClient(filteredClients[0]._id);
+  const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && visibleClients.length === 1 && !showArchived) {
+      onSelectClient(visibleClients[0]._id);
     } else if (e.key === 'Escape') {
       setSearchTerm('');
-      if (selectedClientId) {
-        onCloseClient();
-      }
     }
   };
 
-  const renderSortIndicator = (column: SortColumn) => {
-    if (sortColumn === column) {
-      return sortDirection === 'asc' ? ' ▲' : ' ▼';
+  const handleUnarchive = async (id: Id<"clients">) => {
+    try {
+      await unarchiveClient({ id });
+      toast.success("Consumer restored to your caseload");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to restore consumer");
     }
-    return '';
   };
 
-  // Table headers - shared between compact and full modes
-  const tableHeaders = (
-    <TableHeader>
-      <TableRow>
-        <TableHead 
-          className="text-center cursor-pointer hover:bg-muted/50"
-          onClick={() => handleColumnSort('name')}
-        >
-          Consumer{renderSortIndicator('name')}
-        </TableHead>
-        <TableHead className="text-center">
-          Next QR
-        </TableHead>
-        <TableHead 
-          className="text-center cursor-pointer hover:bg-muted/50"
-          onClick={() => handleColumnSort('lastContact')}
-        >
-          Last Contact{renderSortIndicator('lastContact')}
-        </TableHead>
-        <TableHead 
-          className="text-center cursor-pointer hover:bg-muted/50"
-          onClick={() => handleColumnSort('lastF2F')}
-        >
-          Last Face to Face{renderSortIndicator('lastF2F')}
-        </TableHead>
-      </TableRow>
-    </TableHeader>
+  const toggleFilter = (filter: CaseloadFilter) =>
+    setActiveFilters((prev) =>
+      prev.includes(filter) ? prev.filter((f) => f !== filter) : [...prev, filter]
+    );
+
+  const rowProps = (client: ClientData) => ({
+    client,
+    onSelect: () => onSelectClient(client._id),
+    todoCount: todoCounts[client._id]?.incomplete,
+    onUnarchive: showArchived ? () => void handleUnarchive(client._id) : undefined,
+  });
+
+  const sortableHeader = (column: SortColumn, label: string) => (
+    <TableHead
+      className="text-center cursor-pointer hover:bg-muted/50"
+      onClick={() => handleColumnSort(column)}
+    >
+      {label}
+      {sortColumn === column && (sortDirection === 'asc' ? ' ▲' : ' ▼')}
+    </TableHead>
   );
 
   return (
     <div>
-      {/* Search and Sort Controls */}
+      {/* Search and sort controls */}
       <div className="mb-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="search" className="block text-sm font-medium text-foreground mb-2">
-              Search Clients
-            </label>
+            <Label htmlFor="search" className="block text-sm font-medium mb-2">
+              Search Consumers
+            </Label>
             <Input
               id="search"
-              ref={searchInputRef}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Search by name... (Press Enter when one result, Esc to clear)"
               autoFocus
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Sort by:</label>
-            <Select value={sortBy} onValueChange={(value: NameSortBy) => setSortBy(value)}>
+            <Label className="block text-sm font-medium mb-2">Sort names by:</Label>
+            <Select value={nameSortBy} onValueChange={(value: NameSortBy) => setNameSortBy(value)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -170,65 +173,62 @@ export function ClientList({
             </Select>
           </div>
         </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <ClientFilters
+            counts={filterCounts}
+            active={activeFilters}
+            onToggle={toggleFilter}
+            onClear={() => setActiveFilters([])}
+          />
+          <Button
+            onClick={() => setShowArchived(!showArchived)}
+            variant={showArchived ? "default" : "outline"}
+            size="sm"
+            className="h-7 gap-1 px-2 text-xs"
+          >
+            {showArchived ? <Users className="h-3 w-3" /> : <Archive className="h-3 w-3" />}
+            {showArchived ? "Show Active" : "Show Archived"}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">
         {/* Desktop table view */}
         <div className="hidden md:block">
           <Table>
-            {tableHeaders}
+            <TableHeader>
+              <TableRow>
+                {sortableHeader('name', 'Consumer')}
+                {sortableHeader('nextQR', 'Next QR')}
+                {sortableHeader('lastContact', 'Last Contact')}
+                {sortableHeader('lastF2F', 'Last Face to Face')}
+              </TableRow>
+            </TableHeader>
             <TableBody>
-              {filteredClients.map((client) => (
-                <ClientRow
-                  key={client._id}
-                  client={client}
-                  isSelected={client._id === selectedClientId}
-                  onSelect={() => onSelectClient(client._id)}
-                  todoCount={todoCounts[client._id]?.incomplete}
-                  isCompact={isCompactMode}
-                  variant="table"
-                />
+              {visibleClients.map((client) => (
+                <ClientRow key={client._id} {...rowProps(client)} isCompact={isCompactMode} variant="table" />
               ))}
             </TableBody>
           </Table>
         </div>
 
         {/* Mobile card view */}
-        <div className="md:hidden space-y-4">
-          {isCompactMode ? (
-            <div className="space-y-1">
-              {filteredClients.map((client) => (
-                <ClientRow
-                  key={client._id}
-                  client={client}
-                  isSelected={client._id === selectedClientId}
-                  onSelect={() => onSelectClient(client._id)}
-                  todoCount={todoCounts[client._id]?.incomplete}
-                  isCompact={true}
-                  variant="card"
-                />
-              ))}
-            </div>
-          ) : (
-            filteredClients.map((client) => (
-              <ClientRow
-                key={client._id}
-                client={client}
-                isSelected={client._id === selectedClientId}
-                onSelect={() => onSelectClient(client._id)}
-                todoCount={todoCounts[client._id]?.incomplete}
-                isCompact={false}
-                variant="card"
-              />
-            ))
-          )}
+        <div className={`md:hidden ${isCompactMode ? "space-y-1" : "space-y-4"}`}>
+          {visibleClients.map((client) => (
+            <ClientRow key={client._id} {...rowProps(client)} isCompact={isCompactMode} variant="card" />
+          ))}
         </div>
 
         {/* Empty state */}
-        {clients.length === 0 && (
+        {visibleClients.length === 0 && (
           <Card>
             <CardContent className="p-4 text-center text-muted-foreground">
-              No consumers yet
+              {clients.length === 0
+                ? showArchived
+                  ? "No archived consumers"
+                  : "No consumers yet"
+                : "No consumers match the current search and filters"}
             </CardContent>
           </Card>
         )}

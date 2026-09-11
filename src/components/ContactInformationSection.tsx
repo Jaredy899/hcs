@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -9,63 +9,51 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Edit, Save, X } from "lucide-react";
 
+interface ClientContactData {
+  _id: Id<"clients">;
+  name?: string;
+  phoneNumber?: string;
+  insurance?: string;
+  clientId?: string;
+}
+
 interface ContactInformationSectionProps {
-  client: {
-    _id: Id<"clients">;
-    name?: string;
-    phoneNumber?: string;
-    insurance?: string;
-    clientId?: string;
+  client: ClientContactData;
+}
+
+const FIELDS = [
+  { key: "name", label: "Name", type: "text", showWhenIdle: false },
+  { key: "phoneNumber", label: "Phone", type: "tel", showWhenIdle: true },
+  { key: "insurance", label: "Insurance", type: "text", showWhenIdle: true },
+  { key: "clientId", label: "Client ID", type: "text", showWhenIdle: true },
+] as const;
+
+type EditableFields = Record<(typeof FIELDS)[number]["key"], string>;
+
+function toEditableFields(client: ClientContactData): EditableFields {
+  return {
+    name: client.name ?? "",
+    phoneNumber: client.phoneNumber ?? "",
+    insurance: client.insurance ?? "",
+    clientId: client.clientId ?? "",
   };
 }
 
 export function ContactInformationSection({ client }: ContactInformationSectionProps) {
-  const updateContact = useMutation(api.clients.updateContact);
-  
-  const [isEditingContact, setIsEditingContact] = useState(false);
-  const [editedContact, setEditedContact] = useState({
-    name: "",
-    phoneNumber: "",
-    insurance: "",
-    clientId: ""
-  });
+  const updateInfo = useMutation(api.clients.updateInfo);
 
-  // Sync local state with client changes
-  useEffect(() => {
-    if (client) {
-      setEditedContact({
-        name: client.name || "",
-        phoneNumber: client.phoneNumber || "",
-        insurance: client.insurance || "",
-        clientId: client.clientId || ""
-      });
-    }
-  }, [client]);
+  // `null` while not editing, so the draft is seeded from the client on Edit
+  // instead of being kept in sync by an effect.
+  const [draft, setDraft] = useState<EditableFields | null>(null);
 
-  const handleSaveContact = async () => {
+  const handleSave = async () => {
+    if (!draft) return;
     try {
-      await Promise.all([
-        updateContact({ id: client._id, field: "name", value: editedContact.name }),
-        updateContact({ id: client._id, field: "phoneNumber", value: editedContact.phoneNumber }),
-        updateContact({ id: client._id, field: "insurance", value: editedContact.insurance }),
-        updateContact({ id: client._id, field: "clientId", value: editedContact.clientId })
-      ]);
-      setIsEditingContact(false);
+      await updateInfo({ id: client._id, ...draft });
+      setDraft(null);
       toast.success("Contact information updated");
     } catch (error) {
-      toast.error("Failed to update contact information");
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingContact(false);
-    if (client) {
-      setEditedContact({
-        name: client.name || "",
-        phoneNumber: client.phoneNumber || "",
-        insurance: client.insurance || "",
-        clientId: client.clientId || ""
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to update contact information");
     }
   };
 
@@ -73,9 +61,9 @@ export function ContactInformationSection({ client }: ContactInformationSectionP
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 pt-3">
         <CardTitle className="text-sm font-semibold">Contact Information</CardTitle>
-        {!isEditingContact ? (
+        {draft === null ? (
           <Button
-            onClick={() => setIsEditingContact(true)}
+            onClick={() => setDraft(toEditableFields(client))}
             variant="outline"
             size="sm"
             className="gap-1 h-6 px-2 text-xs"
@@ -85,20 +73,11 @@ export function ContactInformationSection({ client }: ContactInformationSectionP
           </Button>
         ) : (
           <div className="flex gap-1">
-            <Button
-              onClick={handleSaveContact}
-              size="sm"
-              className="gap-1 h-6 px-2 text-xs"
-            >
+            <Button onClick={() => void handleSave()} size="sm" className="gap-1 h-6 px-2 text-xs">
               <Save className="h-3 w-3" />
               Save
             </Button>
-            <Button
-              onClick={handleCancelEdit}
-              variant="outline"
-              size="sm"
-              className="gap-1 h-6 px-2 text-xs"
-            >
+            <Button onClick={() => setDraft(null)} variant="outline" size="sm" className="gap-1 h-6 px-2 text-xs">
               <X className="h-3 w-3" />
               Cancel
             </Button>
@@ -106,66 +85,32 @@ export function ContactInformationSection({ client }: ContactInformationSectionP
         )}
       </CardHeader>
       <CardContent className="space-y-2 px-3 pb-3">
-        {isEditingContact ? (
-          <>
-            <div className="space-y-1">
-              <Label htmlFor="edit-name" className="text-xs">Name</Label>
-              <Input
-                id="edit-name"
-                type="text"
-                value={editedContact.name}
-                onChange={(e) => setEditedContact(prev => ({ ...prev, name: e.target.value }))}
-                className="h-7 text-xs"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="edit-phone" className="text-xs">Phone Number</Label>
-              <Input
-                id="edit-phone"
-                type="tel"
-                value={editedContact.phoneNumber}
-                onChange={(e) => setEditedContact(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                className="h-7 text-xs"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="edit-insurance" className="text-xs">Insurance</Label>
-              <Input
-                id="edit-insurance"
-                type="text"
-                value={editedContact.insurance}
-                onChange={(e) => setEditedContact(prev => ({ ...prev, insurance: e.target.value }))}
-                className="h-7 text-xs"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="edit-client-id" className="text-xs">Client ID</Label>
-              <Input
-                id="edit-client-id"
-                type="text"
-                value={editedContact.clientId}
-                onChange={(e) => setEditedContact(prev => ({ ...prev, clientId: e.target.value }))}
-                className="h-7 text-xs"
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Phone</p>
-              <p className="text-sm text-foreground">{client.phoneNumber || "Not provided"}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Insurance</p>
-              <p className="text-sm text-foreground">{client.insurance || "Not provided"}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Client ID</p>
-              <p className="text-sm text-foreground">{client.clientId || "Not provided"}</p>
-            </div>
-          </>
-        )}
+        {draft !== null
+          ? FIELDS.map((field) => (
+              <div key={field.key} className="space-y-1">
+                <Label htmlFor={`edit-${field.key}`} className="text-xs">{field.label}</Label>
+                <Input
+                  id={`edit-${field.key}`}
+                  type={field.type}
+                  value={draft[field.key]}
+                  onChange={(e) => setDraft({ ...draft, [field.key]: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      setDraft(null);
+                    }
+                  }}
+                  className="h-7 text-xs"
+                />
+              </div>
+            ))
+          : FIELDS.filter((field) => field.showWhenIdle).map((field) => (
+              <div key={field.key}>
+                <p className="text-xs font-medium text-muted-foreground">{field.label}</p>
+                <p className="text-sm text-foreground">{client[field.key] || "Not provided"}</p>
+              </div>
+            ))}
       </CardContent>
     </Card>
   );
-} 
+}

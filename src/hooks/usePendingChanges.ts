@@ -1,146 +1,93 @@
-import { useState, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 
-interface TodoChange {
-  type: "todo";
-  id: Id<"todos">;
-  completed: boolean;
-}
+export type ContactField =
+  | "firstContactCompleted"
+  | "secondContactCompleted"
+  | "qr1Completed"
+  | "qr2Completed"
+  | "qr3Completed"
+  | "qr4Completed";
 
-interface ContactChange {
-  type: "contact";
-  clientId: Id<"clients">;
-  field: "firstContactCompleted" | "secondContactCompleted" | "qr1Completed" | "qr2Completed" | "qr3Completed" | "qr4Completed";
-  value: boolean;
-}
+export type DateField =
+  | "lastContactDate"
+  | "lastFaceToFaceDate"
+  | "nextAnnualAssessment"
+  | "qr1Date"
+  | "qr2Date"
+  | "qr3Date"
+  | "qr4Date";
 
-interface DateChange {
-  type: "date";
-  clientId: Id<"clients">;
-  field: "lastContactDate" | "lastFaceToFaceDate" | "nextAnnualAssessment" | "qr1Date" | "qr2Date" | "qr3Date" | "qr4Date";
-  value: number;
-}
+type PendingChange =
+  | { type: "todo"; id: Id<"todos">; completed: boolean }
+  | { type: "contact"; clientId: Id<"clients">; field: ContactField; value: boolean }
+  | { type: "date"; clientId: Id<"clients">; field: DateField; value: number };
 
-type PendingChange = TodoChange | ContactChange | DateChange;
+/** One pending change per target, so re-editing the same field replaces the previous value. */
+function changeKey(change: PendingChange): string {
+  return change.type === "todo"
+    ? `todo:${change.id}`
+    : `${change.type}:${change.clientId}:${change.field}`;
+}
 
 export function usePendingChanges() {
-  const [pendingChanges, setPendingChanges] = useState<PendingChange[]>([]);
+  const [changes, setChanges] = useState<Record<string, PendingChange>>({});
   const toggleTodo = useMutation(api.todos.toggle);
   const updateContact = useMutation(api.clients.updateContact);
 
-  const addTodoChange = useCallback((id: Id<"todos">, completed: boolean) => {
-    setPendingChanges(prev => {
-      // Remove any existing change for this todo
-      const filtered = prev.filter(change => 
-        !(change.type === "todo" && change.id === id)
-      );
-      // Add the new change
-      return [...filtered, { type: "todo", id, completed }];
-    });
-  }, []);
+  return useMemo(() => {
+    const add = (change: PendingChange) =>
+      setChanges((prev) => ({ ...prev, [changeKey(change)]: change }));
 
-  const addContactChange = useCallback((
-    clientId: Id<"clients">, 
-    field: ContactChange["field"], 
-    value: boolean
-  ) => {
-    setPendingChanges(prev => {
-      // Remove any existing change for this field
-      const filtered = prev.filter(change => 
-        !(change.type === "contact" && change.clientId === clientId && change.field === field)
-      );
-      // Add the new change
-      return [...filtered, { type: "contact", clientId, field, value }];
-    });
-  }, []);
+    return {
+      addTodoChange: (id: Id<"todos">, completed: boolean) =>
+        add({ type: "todo", id, completed }),
 
-  const addDateChange = useCallback((
-    clientId: Id<"clients">, 
-    field: DateChange["field"], 
-    value: number
-  ) => {
-    setPendingChanges(prev => {
-      // Remove any existing change for this field
-      const filtered = prev.filter(change => 
-        !(change.type === "date" && change.clientId === clientId && change.field === field)
-      );
-      // Add the new change
-      return [...filtered, { type: "date", clientId, field, value }];
-    });
-  }, []);
+      addContactChange: (clientId: Id<"clients">, field: ContactField, value: boolean) =>
+        add({ type: "contact", clientId, field, value }),
 
-  const getTodoState = useCallback((id: Id<"todos">, originalCompleted: boolean) => {
-    const change = pendingChanges.find(change => 
-      change.type === "todo" && change.id === id
-    ) as TodoChange | undefined;
-    return change ? change.completed : originalCompleted;
-  }, [pendingChanges]);
+      addDateChange: (clientId: Id<"clients">, field: DateField, value: number) =>
+        add({ type: "date", clientId, field, value }),
 
-  const getContactState = useCallback((
-    clientId: Id<"clients">, 
-    field: ContactChange["field"], 
-    originalValue: boolean
-  ) => {
-    const change = pendingChanges.find(change => 
-      change.type === "contact" && change.clientId === clientId && change.field === field
-    ) as ContactChange | undefined;
-    return change ? change.value : originalValue;
-  }, [pendingChanges]);
+      getTodoState: (id: Id<"todos">, originalCompleted: boolean) => {
+        const change = changes[`todo:${id}`];
+        return change?.type === "todo" ? change.completed : originalCompleted;
+      },
 
-  const getDateState = useCallback((
-    clientId: Id<"clients">, 
-    field: DateChange["field"], 
-    originalValue: number | undefined
-  ) => {
-    const change = pendingChanges.find(change => 
-      change.type === "date" && change.clientId === clientId && change.field === field
-    ) as DateChange | undefined;
-    return change ? change.value : originalValue;
-  }, [pendingChanges]);
+      getContactState: (clientId: Id<"clients">, field: ContactField, originalValue: boolean) => {
+        const change = changes[`contact:${clientId}:${field}`];
+        return change?.type === "contact" ? change.value : originalValue;
+      },
 
-  const syncChanges = useCallback(async () => {
-    if (pendingChanges.length === 0) return;
+      getDateState: (clientId: Id<"clients">, field: DateField, originalValue: number | undefined) => {
+        const change = changes[`date:${clientId}:${field}`];
+        return change?.type === "date" ? change.value : originalValue;
+      },
 
-    try {
-      // Process all changes sequentially to better handle errors
-      for (const change of pendingChanges) {
-        try {
-          if (change.type === "todo") {
-            await toggleTodo({ id: change.id, completed: change.completed });
-          } else if (change.type === "contact" || change.type === "date") {
-            await updateContact({
-              id: change.clientId,
-              field: change.field,
-              value: change.value
-            });
+      syncChanges: async () => {
+        // Sequential so a failure leaves the remaining changes pending for a retry.
+        for (const change of Object.values(changes)) {
+          try {
+            if (change.type === "todo") {
+              await toggleTodo({ id: change.id, completed: change.completed });
+            } else {
+              await updateContact({ id: change.clientId, field: change.field, value: change.value });
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to sync ${change.type} change: ${message}`, { cause: error });
           }
-        } catch (changeError) {
-          throw new Error(`Failed to sync ${change.type} change: ${changeError}`);
         }
-      }
+        setChanges({});
+      },
 
-      setPendingChanges([]);
-    } catch (error) {
-      // Keep the changes in case user wants to retry
-      throw error;
-    }
-  }, [pendingChanges, toggleTodo, updateContact]);
+      clearChanges: () => setChanges({}),
 
-  const clearChanges = useCallback(() => {
-    setPendingChanges([]);
-  }, []);
+      hasPendingChanges: Object.keys(changes).length > 0,
+    };
+  }, [changes, toggleTodo, updateContact]);
+}
 
-  return {
-    addTodoChange,
-    addContactChange,
-    addDateChange,
-    getTodoState,
-    getContactState,
-    getDateState,
-    syncChanges,
-    clearChanges,
-    hasPendingChanges: pendingChanges.length > 0
-  };
-} 
+export type PendingChanges = ReturnType<typeof usePendingChanges>;

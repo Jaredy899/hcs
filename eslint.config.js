@@ -74,4 +74,12 @@ export default tseslint.config(
       "@typescript-eslint/require-await": "off",
     },
   },
+  {
+    // The entry point mounts the root and exports nothing, so fast refresh
+    // never applies to it.
+    files: ["src/main.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
 );

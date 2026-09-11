@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -28,6 +28,8 @@ const STICKY_NOTE_COLORS = [
   "#f3e8ff", // Purple
   "#f1f5f9", // Gray
 ];
+
+const DEFAULT_COLOR = STICKY_NOTE_COLORS[0];
 
 interface StickyNotesProps {
   showStickyNotes: boolean;
@@ -70,10 +72,9 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
   const [editText, setEditText] = useState(note.text);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Use shared draggable hook
-  const { isDragging, handleMouseDown } = useDraggable({
+  const { isDragging, dragPosition, handleMouseDown } = useDraggable({
     elementRef: cardRef,
-    onMove: (x, y) => onUpdate({ id: note._id, position: { x, y } }),
+    onMoveEnd: (x, y) => void onUpdate({ id: note._id, position: { x, y } }),
     bounds: {
       minX: 0,
       maxX: window.innerWidth - 250,
@@ -82,26 +83,10 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
     },
   });
 
-  // Auto-save when clicking outside the note
-  useEffect(() => {
-    if (!isEditing) return;
-    
-    const handleClickOutside = (e: MouseEvent) => {
-      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
-        saveEdit();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isEditing, editText]);
-
-  const startEditing = () => {
-    setIsEditing(true);
-    setEditText(note.text);
-  };
+  const position = dragPosition ?? note.position;
 
   const saveEdit = async () => {
+    // An empty note has nothing to keep, so discard it entirely.
     if (!editText.trim()) {
       await onDelete({ id: note._id });
       return;
@@ -115,18 +100,14 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
     setEditText(note.text);
   };
 
-  const handleColorChange = (color: string) => {
-    onUpdate({ id: note._id, color });
-  };
-
   return (
     <Card
       ref={cardRef}
       className={`fixed w-64 shadow-lg cursor-move select-none z-40 ${isDragging ? "opacity-80" : ""}`}
       style={{
-        left: note.position.x,
-        top: note.position.y,
-        backgroundColor: note.color || "#fef3c7",
+        left: position.x,
+        top: position.y,
+        backgroundColor: note.color || DEFAULT_COLOR,
       }}
       onMouseDown={handleMouseDown}
       onClick={(e) => e.stopPropagation()}
@@ -136,10 +117,11 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
         <div className="flex justify-between items-start mb-2">
           <div className="flex gap-1">
             <Button
-              onClick={(e) => { e.stopPropagation(); onCreateNote(); }}
+              onClick={() => void onCreateNote()}
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0 bg-white/70 hover:bg-white/90 text-gray-700 hover:text-gray-900"
+              title="Add another note"
             >
               <Plus className="h-3 w-3" />
             </Button>
@@ -149,7 +131,7 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
                   variant="ghost"
                   size="sm"
                   className="h-6 w-6 p-0 bg-white/70 hover:bg-white/90 text-gray-700 hover:text-gray-900"
-                  onClick={(e) => e.stopPropagation()}
+                  title="Change colour"
                 >
                   <Palette className="h-3 w-3" />
                 </Button>
@@ -161,7 +143,7 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
                       key={color}
                       className="w-6 h-6 rounded border-2 border-muted hover:border-foreground"
                       style={{ backgroundColor: color }}
-                      onClick={() => handleColorChange(color)}
+                      onClick={() => void onUpdate({ id: note._id, color })}
                     />
                   ))}
                 </div>
@@ -171,19 +153,24 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
           <div className="flex gap-1">
             {!isEditing && (
               <Button
-                onClick={(e) => { e.stopPropagation(); startEditing(); }}
+                onClick={() => {
+                  setEditText(note.text);
+                  setIsEditing(true);
+                }}
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0 bg-white/70 hover:bg-white/90 text-gray-700 hover:text-gray-900"
+                title="Edit note"
               >
                 <Edit className="h-3 w-3" />
               </Button>
             )}
             <Button
-              onClick={(e) => { e.stopPropagation(); onDelete({ id: note._id }); }}
+              onClick={() => void onDelete({ id: note._id })}
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0 bg-white/70 hover:bg-white/90 text-red-600 hover:text-red-700"
+              title="Delete note"
             >
               <Trash2 className="h-3 w-3" />
             </Button>
@@ -192,7 +179,7 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
 
         {/* Content */}
         {isEditing ? (
-          <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+          <div className="space-y-2">
             <Textarea
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
@@ -202,16 +189,22 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  saveEdit();
-                }
-                if (e.key === "Escape") {
+                  void saveEdit();
+                } else if (e.key === "Escape") {
+                  e.preventDefault();
                   cancelEdit();
                 }
+              }}
+              onBlur={(e) => {
+                // Auto-save when focus leaves the note, but let the note's own
+                // Save and Cancel buttons handle their own clicks.
+                if (cardRef.current?.contains(e.relatedTarget)) return;
+                void saveEdit();
               }}
             />
             <div className="flex gap-1">
               <Button
-                onClick={saveEdit}
+                onClick={() => void saveEdit()}
                 size="sm"
                 className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
               >
@@ -232,9 +225,7 @@ function StickyNoteCard({ note, onUpdate, onDelete, onCreateNote }: StickyNoteCa
         ) : (
           <div>
             <p className="text-sm whitespace-pre-wrap text-gray-900">{note.text}</p>
-            <p className="text-xs text-gray-600 mt-2">
-              {formatShortDateTime(note.updatedAt)}
-            </p>
+            <p className="text-xs text-gray-600 mt-2">{formatShortDateTime(note.updatedAt)}</p>
           </div>
         )}
       </div>

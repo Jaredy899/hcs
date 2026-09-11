@@ -1,10 +1,10 @@
-import { StrictMode, useMemo } from "react";
+import { StrictMode, useCallback, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
-import { ConvexReactClient } from "convex/react";
-import { ConvexProviderWithAuth } from "convex/react";
+import { ConvexReactClient, ConvexProviderWithAuth } from "convex/react";
 import "./index.css";
 import App from "./App";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {
@@ -13,44 +13,44 @@ if (!PUBLISHABLE_KEY) {
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
-function ConvexProviderWithClerk({ children }: { children: React.ReactNode }) {
-  const auth = useAuth();
-  
-  const convexAuth = useMemo(() => ({
-    isLoading: !auth.isLoaded,
-    isAuthenticated: auth.isLoaded && !!auth.isSignedIn && !!auth.userId,
-    fetchAccessToken: async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
+function useConvexAuthFromClerk() {
+  const { isLoaded, isSignedIn, userId, sessionId, getToken } = useAuth();
+
+  const fetchAccessToken = useCallback(
+    async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
+      // Only fetch a token once Clerk has a complete session
+      if (!isLoaded || !isSignedIn || !userId || !sessionId) {
+        return null;
+      }
+
       try {
-        // Only fetch token if fully authenticated
-        if (!auth.isLoaded || !auth.isSignedIn || !auth.userId || !auth.sessionId) {
-          return null;
-        }
-        
-        const token = await auth.getToken({ 
-          template: "convex",
-          skipCache: forceRefreshToken 
-        });
-        return token;
+        return await getToken({ template: "convex", skipCache: forceRefreshToken });
       } catch (error) {
         console.error("Error fetching access token:", error);
         return null;
       }
     },
-  }), [auth.isLoaded, auth.isSignedIn, auth.userId, auth.sessionId, auth.getToken]);
+    [isLoaded, isSignedIn, userId, sessionId, getToken]
+  );
 
-  return (
-    <ConvexProviderWithAuth client={convex} useAuth={() => convexAuth}>
-      {children}
-    </ConvexProviderWithAuth>
+  return useMemo(
+    () => ({
+      isLoading: !isLoaded,
+      isAuthenticated: isLoaded && !!isSignedIn && !!userId,
+      fetchAccessToken,
+    }),
+    [isLoaded, isSignedIn, userId, fetchAccessToken]
   );
 }
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <ConvexProviderWithClerk>
-        <App />
-      </ConvexProviderWithClerk>
-    </ClerkProvider>
+    <ErrorBoundary>
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+        <ConvexProviderWithAuth client={convex} useAuth={useConvexAuthFromClerk}>
+          <App />
+        </ConvexProviderWithAuth>
+      </ClerkProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

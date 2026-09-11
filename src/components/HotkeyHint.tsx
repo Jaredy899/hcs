@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { isMac } from "../hooks/useClientDetailsHotkeys";
+import { getModifierKeyName } from "../hooks/useClientDetailsHotkeys";
 
 interface HotkeyHintProps {
   hotkey: string;
@@ -10,8 +10,8 @@ interface HotkeyHintProps {
 export function HotkeyHint({ hotkey, className, show = true }: HotkeyHintProps) {
   if (!show) return null;
 
-  // Convert generic hotkey to platform-specific
-  const platformHotkey = hotkey.replace('Ctrl+', isMac ? 'Ctrl+' : 'Alt+').replace('Alt+', isMac ? 'Ctrl+' : 'Alt+');
+  // Hotkeys are written generically; swap the leading modifier for this platform's.
+  const platformHotkey = hotkey.replace(/^(Ctrl|Alt)\+/, `${getModifierKeyName()}+`);
 
   return (
     <kbd className={cn(

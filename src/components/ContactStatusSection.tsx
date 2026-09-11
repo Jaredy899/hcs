@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { HotkeyHint } from "./HotkeyHint";
+import { PendingChanges } from "../hooks/usePendingChanges";
 
 interface ContactStatusSectionProps {
   client: {
@@ -10,22 +11,33 @@ interface ContactStatusSectionProps {
     firstContactCompleted?: boolean;
     secondContactCompleted?: boolean;
   };
-  pendingChanges: {
-    addContactChange: (clientId: Id<"clients">, field: "firstContactCompleted" | "secondContactCompleted", value: boolean) => void;
-    getContactState: (clientId: Id<"clients">, field: "firstContactCompleted" | "secondContactCompleted", originalValue: boolean) => boolean;
-  };
+  pendingChanges: PendingChanges;
   isEditing?: boolean;
   showHotkeyHints?: boolean;
 }
 
-export function ContactStatusSection({ client, pendingChanges, isEditing = false, showHotkeyHints = false }: ContactStatusSectionProps) {
-  const handleToggleContact = (field: "firstContactCompleted" | "secondContactCompleted", currentValue: boolean) => {
-    const newValue = !currentValue;
-    pendingChanges.addContactChange(client._id, field, newValue);
-  };
-
-  const firstContactState = pendingChanges.getContactState(client._id, "firstContactCompleted", client.firstContactCompleted || false);
-  const secondContactState = pendingChanges.getContactState(client._id, "secondContactCompleted", client.secondContactCompleted || false);
+export function ContactStatusSection({
+  client,
+  pendingChanges,
+  isEditing = false,
+  showHotkeyHints = false,
+}: ContactStatusSectionProps) {
+  const contacts = [
+    {
+      id: "first-contact",
+      field: "firstContactCompleted" as const,
+      label: "First Contact",
+      hotkey: "Ctrl+1",
+      checked: pendingChanges.getContactState(client._id, "firstContactCompleted", client.firstContactCompleted ?? false),
+    },
+    {
+      id: "second-contact",
+      field: "secondContactCompleted" as const,
+      label: "Second Contact",
+      hotkey: "Ctrl+2",
+      checked: pendingChanges.getContactState(client._id, "secondContactCompleted", client.secondContactCompleted ?? false),
+    },
+  ];
 
   return (
     <Card>
@@ -33,29 +45,20 @@ export function ContactStatusSection({ client, pendingChanges, isEditing = false
         <CardTitle className="text-sm font-semibold">Contact Status</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 px-3 py-9">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="first-contact"
-            checked={firstContactState}
-            onCheckedChange={() => handleToggleContact("firstContactCompleted", firstContactState)}
-          />
-          <Label htmlFor="first-contact" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            First Contact
-            <HotkeyHint hotkey="Ctrl+1" show={!isEditing && showHotkeyHints} />
-          </Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="second-contact"
-            checked={secondContactState}
-            onCheckedChange={() => handleToggleContact("secondContactCompleted", secondContactState)}
-          />
-          <Label htmlFor="second-contact" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            Second Contact
-            <HotkeyHint hotkey="Ctrl+2" show={!isEditing && showHotkeyHints} />
-          </Label>
-        </div>
+        {contacts.map((contact) => (
+          <div key={contact.id} className="flex items-center space-x-2">
+            <Checkbox
+              id={contact.id}
+              checked={contact.checked}
+              onCheckedChange={() => pendingChanges.addContactChange(client._id, contact.field, !contact.checked)}
+            />
+            <Label htmlFor={contact.id} className="text-sm font-medium leading-none">
+              {contact.label}
+              <HotkeyHint hotkey={contact.hotkey} show={!isEditing && showHotkeyHints} />
+            </Label>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );
-} 
+}

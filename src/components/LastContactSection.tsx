@@ -4,7 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { getTimeBasedColor, getUpcomingDateColor } from "@/lib/dateColors";
+import {
+  CONTACT_MAX_DAYS,
+  FACE_TO_FACE_MAX_DAYS,
+  formatShortDate,
+  nextFaceToFaceDate,
+} from "@/lib/dateUtils";
 import { HotkeyHint } from "./HotkeyHint";
+import { PendingChanges } from "../hooks/usePendingChanges";
+
+type ContactDateField = "lastContactDate" | "lastFaceToFaceDate";
 
 interface LastContactSectionProps {
   client: {
@@ -12,28 +21,65 @@ interface LastContactSectionProps {
     lastContactDate?: number;
     lastFaceToFaceDate?: number;
   };
-  pendingChanges: {
-    addDateChange: (clientId: Id<"clients">, field: "lastContactDate" | "lastFaceToFaceDate", value: number) => void;
-    getDateState: (clientId: Id<"clients">, field: "lastContactDate" | "lastFaceToFaceDate", originalValue: number | undefined) => number | undefined;
-  };
+  pendingChanges: PendingChanges;
   isEditing?: boolean;
   showHotkeyHints?: boolean;
 }
 
-export function LastContactSection({ client, pendingChanges, isEditing = false, showHotkeyHints = false }: LastContactSectionProps) {
-  const handleSetToday = (field: "lastContactDate" | "lastFaceToFaceDate") => {
-    const today = new Date();
-    pendingChanges.addDateChange(client._id, field, today.getTime());
-  };
-
-  const handleDatePickerChange = (field: "lastContactDate" | "lastFaceToFaceDate", date: Date | undefined) => {
-    if (date) {
-      pendingChanges.addDateChange(client._id, field, date.getTime());
-    }
+export function LastContactSection({
+  client,
+  pendingChanges,
+  isEditing = false,
+  showHotkeyHints = false,
+}: LastContactSectionProps) {
+  const setDate = (field: ContactDateField, date: Date | undefined) => {
+    if (!date) return;
+    pendingChanges.addDateChange(client._id, field, date.getTime());
   };
 
   const lastContactValue = pendingChanges.getDateState(client._id, "lastContactDate", client.lastContactDate);
   const lastFaceToFaceValue = pendingChanges.getDateState(client._id, "lastFaceToFaceDate", client.lastFaceToFaceDate);
+
+  const renderDateRow = (
+    field: ContactDateField,
+    label: string,
+    hotkey: string,
+    hotkeyTitle: string,
+    value: number | undefined,
+    maxDays: number,
+    emptyText: string,
+  ) => (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">{label}</span>
+        <Button
+          onClick={() => setDate(field, new Date())}
+          size="sm"
+          className="h-6 px-2 gap-1 text-xs"
+          title={hotkeyTitle}
+        >
+          <Calendar className="h-3 w-3" />
+          Today
+          <HotkeyHint hotkey={hotkey} show={!isEditing && showHotkeyHints} />
+        </Button>
+      </div>
+
+      <DatePicker
+        date={value ? new Date(value) : undefined}
+        onDateChange={(date) => setDate(field, date)}
+        placeholder="Select date"
+        className="h-7 text-xs"
+      />
+
+      <p className="text-sm text-muted-foreground">
+        {value ? (
+          <span className={getTimeBasedColor(value, maxDays, "text-green-600")}>{formatShortDate(value)}</span>
+        ) : (
+          emptyText
+        )}
+      </p>
+    </div>
+  );
 
   return (
     <Card>
@@ -41,78 +87,37 @@ export function LastContactSection({ client, pendingChanges, isEditing = false, 
         <CardTitle className="text-sm font-semibold">Contact Dates</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 px-4 pb-3">
-        {/* Last Contact Section */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Last Contact</span>
-            <Button
-              onClick={() => handleSetToday("lastContactDate")}
-              size="sm"
-              className="h-6 px-2 gap-1 text-xs"
-              title="Set Last Contact to Today (Ctrl+T)"
-            >
-              <Calendar className="h-3 w-3" />
-              Today
-              <HotkeyHint hotkey="Ctrl+T" show={!isEditing && showHotkeyHints} />
-            </Button>
-          </div>
-          
-          {/* Date Picker */}
-          <DatePicker
-            date={lastContactValue ? new Date(lastContactValue) : undefined}
-            onDateChange={(date) => handleDatePickerChange("lastContactDate", date)}
-            placeholder="Select date"
-            className="h-7 text-xs"
-          />
+        {renderDateRow(
+          "lastContactDate",
+          "Last Contact",
+          "Ctrl+T",
+          "Set Last Contact to Today (Ctrl+T)",
+          lastContactValue,
+          CONTACT_MAX_DAYS,
+          "No contact recorded",
+        )}
 
-          <p className="text-sm text-muted-foreground">
-            {lastContactValue
-              ? <span className={getTimeBasedColor(lastContactValue, 30, "text-green-600")}>{new Date(lastContactValue).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-              : "No contact recorded"}
-          </p>
-        </div>
+        <div className="space-y-1">
+          {renderDateRow(
+            "lastFaceToFaceDate",
+            "Last Face to Face",
+            "Ctrl+F",
+            "Set Last Face-to-Face to Today (Ctrl+F)",
+            lastFaceToFaceValue,
+            FACE_TO_FACE_MAX_DAYS,
+            "No face to face recorded",
+          )}
 
-        {/* Last Face to Face Section */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Last Face to Face</span>
-            <Button
-              onClick={() => handleSetToday("lastFaceToFaceDate")}
-              size="sm"
-              className="h-6 px-2 gap-1 text-xs"
-              title="Set Last Face-to-Face to Today (Ctrl+F)"
-            >
-              <Calendar className="h-3 w-3" />
-              Today
-              <HotkeyHint hotkey="Ctrl+F" show={!isEditing && showHotkeyHints} />
-            </Button>
-          </div>
-          
-          {/* Date Picker */}
-          <DatePicker
-            date={lastFaceToFaceValue ? new Date(lastFaceToFaceValue) : undefined}
-            onDateChange={(date) => handleDatePickerChange("lastFaceToFaceDate", date)}
-            placeholder="Select date"
-            className="h-7 text-xs"
-          />
-
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">
-              {lastFaceToFaceValue
-                ? <span className={getTimeBasedColor(lastFaceToFaceValue, 90, "text-green-600")}>{new Date(lastFaceToFaceValue).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                : "No face to face recorded"}
+          {lastFaceToFaceValue && (
+            <p className="text-sm font-medium">
+              <span className="text-muted-foreground">Next due: </span>
+              <span className={getUpcomingDateColor(nextFaceToFaceDate(lastFaceToFaceValue), 15, "text-indigo-600")}>
+                {formatShortDate(nextFaceToFaceDate(lastFaceToFaceValue))}
+              </span>
             </p>
-            {lastFaceToFaceValue && (
-              <p className="text-sm font-medium">
-                <span className="text-muted-foreground">Next due: </span>
-                <span className={getUpcomingDateColor(new Date(lastFaceToFaceValue + (90 * 24 * 60 * 60 * 1000)), 15, "text-indigo-600")}>
-                  {new Date(lastFaceToFaceValue + (90 * 24 * 60 * 60 * 1000)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                </span>
-              </p>
-            )}
-          </div>
+          )}
         </div>
       </CardContent>
     </Card>
   );
-} 
+}

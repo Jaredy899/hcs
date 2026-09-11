@@ -14,6 +14,7 @@ import { ArrowLeft, Archive } from "lucide-react";
 import { usePendingChanges } from "./hooks/usePendingChanges";
 import { useClientDetailsHotkeys } from "./hooks/useClientDetailsHotkeys";
 import { HotkeyHint } from "./components/HotkeyHint";
+import { ModalOverlay } from "./components/ModalOverlay";
 import { SectionFocusProvider } from "./hooks/useSectionFocus";
 
 interface ClientDetailsProps {
@@ -58,84 +59,68 @@ export default function ClientDetails({ clientId, onClose }: ClientDetailsProps)
     onClose();
   };
 
-  if (!client) return null;
-
   const handleArchive = async () => {
-    if (confirm("Are you sure you want to archive this consumer?")) {
-      if (pendingChanges.hasPendingChanges) {
-        try {
-          await pendingChanges.syncChanges();
-        } catch {
-          toast.error("Failed to save pending changes");
-          return;
-        }
+    if (!confirm("Are you sure you want to archive this consumer?")) return;
+
+    if (pendingChanges.hasPendingChanges) {
+      try {
+        await pendingChanges.syncChanges();
+      } catch {
+        toast.error("Failed to save pending changes");
+        return;
       }
-      await archiveClient({ id: clientId });
-      toast.success("Consumer archived");
-      onClose();
     }
+    await archiveClient({ id: clientId });
+    toast.success("Consumer archived");
+    onClose();
   };
 
-  // Hotkey handlers
-  const handleSetLastContactToday = () => {
-    pendingChanges.addDateChange(clientId, "lastContactDate", Date.now());
-    toast.success("Last contact set to today");
+  const setDateToToday = (field: "lastContactDate" | "lastFaceToFaceDate", label: string) => {
+    pendingChanges.addDateChange(clientId, field, Date.now());
+    toast.success(`${label} set to today`);
   };
 
-  const handleSetFaceToFaceToday = () => {
-    pendingChanges.addDateChange(clientId, "lastFaceToFaceDate", Date.now());
-    toast.success("Last face-to-face set to today");
-  };
-
-  const handleToggleFirstContact = () => {
-    const current = pendingChanges.getContactState(clientId, "firstContactCompleted", client.firstContactCompleted || false);
-    pendingChanges.addContactChange(clientId, "firstContactCompleted", !current);
-    toast.success(`First contact ${!current ? 'completed' : 'marked incomplete'}`);
-  };
-
-  const handleToggleSecondContact = () => {
-    const current = pendingChanges.getContactState(clientId, "secondContactCompleted", client.secondContactCompleted || false);
-    pendingChanges.addContactChange(clientId, "secondContactCompleted", !current);
-    toast.success(`Second contact ${!current ? 'completed' : 'marked incomplete'}`);
+  const toggleContact = (field: "firstContactCompleted" | "secondContactCompleted", label: string) => {
+    if (!client) return;
+    const current = pendingChanges.getContactState(clientId, field, client[field] ?? false);
+    pendingChanges.addContactChange(clientId, field, !current);
+    toast.success(`${label} ${!current ? "completed" : "marked incomplete"}`);
   };
 
   const scrollToRef = (ref: React.RefObject<HTMLDivElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Initialize hotkeys
+  // Must run before the `client` guard below so the hook order stays stable
+  // while the client query is in flight.
   const { isEditing, showHotkeyHints } = useClientDetailsHotkeys({
-    onSetLastContactToday: handleSetLastContactToday,
-    onSetFaceToFaceToday: handleSetFaceToFaceToday,
-    onToggleFirstContact: handleToggleFirstContact,
-    onToggleSecondContact: handleToggleSecondContact,
+    onSetLastContactToday: () => setDateToToday("lastContactDate", "Last contact"),
+    onSetFaceToFaceToday: () => setDateToToday("lastFaceToFaceDate", "Last face-to-face"),
+    onToggleFirstContact: () => toggleContact("firstContactCompleted", "First contact"),
+    onToggleSecondContact: () => toggleContact("secondContactCompleted", "Second contact"),
     onFocusAddTodo: () => addTodoInputRef.current?.focus(),
     onFocusAddNote: () => addNoteTextareaRef.current?.focus(),
-    onCloseModal: handleClose,
-    onArchiveClient: handleArchive,
+    onCloseModal: () => void handleClose(),
+    onArchiveClient: () => void handleArchive(),
     onFocusContactSection: () => scrollToRef(contactSectionRef),
     onFocusStatusSection: () => scrollToRef(statusSectionRef),
     onFocusTodoSection: () => scrollToRef(todoSectionRef),
     onFocusNotesSection: () => scrollToRef(notesSectionRef),
-    onEscape: handleClose,
+    onEscape: () => void handleClose(),
   });
+
+  if (!client) return null;
 
   return (
     <SectionFocusProvider>
-      <div
-        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-1 sm:p-2"
-        onClick={handleClose}
-      >
-        <div 
-          className="bg-background rounded-lg shadow-lg w-full max-w-7xl max-h-[98vh] sm:max-h-[95vh] flex flex-col border"
-          onClick={(e) => e.stopPropagation()}
-        >
+      <ModalOverlay onDismiss={() => void handleClose()} className="p-1 sm:p-2">
+        <div className="bg-background rounded-lg shadow-lg w-full max-w-7xl max-h-[98vh] sm:max-h-[95vh] flex flex-col border">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center sticky top-0 bg-background border-b z-10 px-3 sm:px-4 pt-3 pb-3 rounded-t-lg gap-3 sm:gap-4">
             <div className="flex flex-col w-full sm:w-auto">
               <div className="flex items-center gap-2 sm:gap-4">
                 <Button
-                  onClick={handleClose}
+                  onClick={() => void handleClose()}
                   variant="ghost"
                   size="sm"
                   className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
@@ -155,7 +140,7 @@ export default function ClientDetails({ clientId, onClose }: ClientDetailsProps)
                     <span className="text-xs text-destructive bg-destructive/10 px-2 py-1 rounded">
                       Save failed
                     </span>
-                    <Button onClick={handleClose} variant="default" size="sm" className="h-6 px-2 text-xs">
+                    <Button onClick={() => void handleClose()} variant="default" size="sm" className="h-6 px-2 text-xs">
                       Try Again
                     </Button>
                     <Button onClick={handleForceClose} variant="outline" size="sm" className="h-6 px-2 text-xs">
@@ -169,13 +154,18 @@ export default function ClientDetails({ clientId, onClose }: ClientDetailsProps)
                 {client.phoneNumber && (
                   <div className="flex items-center gap-1">
                     <span className="text-xs sm:text-sm text-muted-foreground">📞</span>
-                    <span className="text-sm sm:text-base text-muted-foreground">{client.phoneNumber}</span>
+                    <a
+                      href={`tel:${client.phoneNumber}`}
+                      className="text-sm sm:text-base text-muted-foreground hover:underline"
+                    >
+                      {client.phoneNumber}
+                    </a>
                   </div>
                 )}
               </div>
             </div>
             <Button
-              onClick={handleArchive}
+              onClick={() => void handleArchive()}
               variant="destructive"
               size="sm"
               className="gap-1 sm:gap-2 h-8 px-2 sm:px-3 self-end sm:self-auto"
@@ -186,7 +176,7 @@ export default function ClientDetails({ clientId, onClose }: ClientDetailsProps)
               <HotkeyHint hotkey="Ctrl+A" show={!isEditing && showHotkeyHints} />
             </Button>
           </div>
-          
+
           {/* Content */}
           <div className="overflow-y-auto p-3 sm:p-4 flex-1">
             <div className="space-y-3 sm:space-y-4">
@@ -197,19 +187,19 @@ export default function ClientDetails({ clientId, onClose }: ClientDetailsProps)
                     <ContactInformationSection client={client} />
                   </div>
                   <div ref={statusSectionRef}>
-                    <ContactStatusSection 
-                      client={client} 
-                      pendingChanges={pendingChanges} 
-                      isEditing={isEditing} 
-                      showHotkeyHints={showHotkeyHints} 
+                    <ContactStatusSection
+                      client={client}
+                      pendingChanges={pendingChanges}
+                      isEditing={isEditing}
+                      showHotkeyHints={showHotkeyHints}
                     />
                   </div>
                 </div>
-                <LastContactSection 
-                  client={client} 
-                  pendingChanges={pendingChanges} 
-                  isEditing={isEditing} 
-                  showHotkeyHints={showHotkeyHints} 
+                <LastContactSection
+                  client={client}
+                  pendingChanges={pendingChanges}
+                  isEditing={isEditing}
+                  showHotkeyHints={showHotkeyHints}
                 />
                 <ImportantDatesSection client={client} pendingChanges={pendingChanges} />
               </div>
@@ -222,7 +212,7 @@ export default function ClientDetails({ clientId, onClose }: ClientDetailsProps)
                     pendingChanges={pendingChanges}
                     isEditing={isEditing}
                     showHotkeyHints={showHotkeyHints}
-                    addTodoInputRef={addTodoInputRef as React.RefObject<HTMLInputElement>}
+                    addTodoInputRef={addTodoInputRef}
                   />
                 </div>
                 <div ref={notesSectionRef}>
@@ -230,14 +220,14 @@ export default function ClientDetails({ clientId, onClose }: ClientDetailsProps)
                     clientId={clientId}
                     isEditing={isEditing}
                     showHotkeyHints={showHotkeyHints}
-                    addNoteTextareaRef={addNoteTextareaRef as React.RefObject<HTMLTextAreaElement>}
+                    addNoteTextareaRef={addNoteTextareaRef}
                   />
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </ModalOverlay>
     </SectionFocusProvider>
   );
 }

@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
+import type { Matcher } from "@daypicker/react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -11,6 +13,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+
+const MIN_SELECTABLE_DATE = new Date("1900-01-01")
 
 interface DatePickerProps {
   date?: Date
@@ -27,8 +31,10 @@ export function DatePicker({
   className,
   disabled = false,
 }: DatePickerProps) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
@@ -44,17 +50,43 @@ export function DatePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={onDateChange}
-          disabled={(date) =>
-            date > new Date() || date < new Date("1900-01-01")
-          }
-          initialFocus
-          className="rounded-md border shadow-sm"
+        <CalendarPanel
+          date={date}
+          onSelect={(next) => {
+            onDateChange?.(next)
+            setOpen(false)
+          }}
         />
       </PopoverContent>
     </Popover>
   )
-} 
+}
+
+/**
+ * Mounted only while the popover is open, so the "no future dates" boundary is
+ * computed once per open rather than on every render.
+ */
+function CalendarPanel({
+  date,
+  onSelect,
+}: {
+  date?: Date
+  onSelect: (date: Date | undefined) => void
+}) {
+  const [disabledDates] = useState<Matcher[]>(() => [
+    { before: MIN_SELECTABLE_DATE },
+    { after: new Date() },
+  ])
+
+  return (
+    <Calendar
+      mode="single"
+      selected={date}
+      defaultMonth={date}
+      onSelect={onSelect}
+      disabled={disabledDates}
+      autoFocus
+      className="rounded-md border shadow-sm"
+    />
+  )
+}
